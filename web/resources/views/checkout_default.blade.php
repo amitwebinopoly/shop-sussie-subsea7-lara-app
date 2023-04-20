@@ -1216,8 +1216,8 @@ $qa_cart_link = "/cart";
                                         <label for="checkout_email" class="uni-form-input">
                                             <input type="text" id="checkout_email" name="checkout_email" class="form-control"
                                                    autocomplete="shipping email"
-                                                   value="<?= isset($_POST['cust_email']) ? $_POST['cust_email'] : ''; ?>"
-                                                   data-empty="<?= (isset($_POST['cust_email']) && !empty($_POST['cust_email'])) ? 'false' : 'true'; ?>">
+                                                   value="<?= isset($ac_data->ac_customer_email) ? $ac_data->ac_customer_email : ''; ?>"
+                                                   data-empty="<?= (isset($ac_data->ac_customer_email) && !empty($ac_data->ac_customer_email)) ? 'false' : 'true'; ?>">
                                             <span>Email</span>
                                         </label>
                                     </div>
@@ -1268,7 +1268,7 @@ $qa_cart_link = "/cart";
                                                     <?php if (!empty($countries) && is_array($countries)) { ?>
                                                     <?php foreach ($countries as $country) { ?>
                                                     <?php if ($country['code'] != '*') {
-                                                        if (isset($_POST['cust_def_addr']['country_code']) && $_POST['cust_def_addr']['country_code'] == $country['code']) {
+                                                        if (isset($ac_data->ac_shipping_country) && $ac_data->ac_shipping_country == $country['code']) {
                                                             $selected = 'selected';
                                                         } elseif ($country['code'] == 'US') {
                                                             $selected = 'selected';
@@ -1297,8 +1297,8 @@ $qa_cart_link = "/cart";
                                             <label for="shipping_first_name" class="uni-form-input">
                                                 <input type="text" id="shipping_first_name" name="shipping[first_name]"
                                                        class="form-control" autocomplete="shipping given-name"
-                                                       value="<?= isset($_POST['cust_fname']) ? $_POST['cust_fname'] : ''; ?>"
-                                                       data-empty="<?= (isset($_POST['cust_fname']) && !empty($_POST['cust_fname'])) ? 'false' : 'true'; ?>">
+                                                       value="<?= isset($ac_data->ac_shipping_first_name) ? $ac_data->ac_shipping_first_name : ''; ?>"
+                                                       data-empty="<?= (isset($ac_data->ac_shipping_first_name) && !empty($ac_data->ac_shipping_first_name)) ? 'false' : 'true'; ?>">
 											<span>
 												<?php if (isset($cartinfo['attributes']['gift-message']) && $cartinfo['attributes']['gift-message']=='Yes') { ?>
                                                 Gift recipient first name
@@ -1312,8 +1312,8 @@ $qa_cart_link = "/cart";
                                             <label for="shipping_last_name" class="uni-form-input">
                                                 <input type="text" id="shipping_last_name" name="shipping[last_name]"
                                                        class="form-control" autocomplete="shipping family-name"
-                                                       value="<?= isset($_POST['cust_lname']) ? $_POST['cust_lname'] : ''; ?>"
-                                                       data-empty="<?= (isset($_POST['cust_lname']) && !empty($_POST['cust_lname'])) ? 'false' : 'true'; ?>">
+                                                       value="<?= isset($ac_data->ac_shipping_last_name) ? $ac_data->ac_shipping_last_name : ''; ?>"
+                                                       data-empty="<?= (isset($ac_data->ac_shipping_last_name) && !empty($ac_data->ac_shipping_last_name)) ? 'false' : 'true'; ?>">
 											<span>
 												<?php if (isset($cartinfo['attributes']['gift-message']) && $cartinfo['attributes']['gift-message']=='Yes') { ?>
                                                 Gift recipient last name
@@ -1337,8 +1337,8 @@ $qa_cart_link = "/cart";
                                             <label for="shipping_address" class="uni-form-input">
                                                 <input type="text" id="shipping_address" name="shipping[address]"
                                                        class="form-control" autocomplete="shipping address-line1"
-                                                       value="<?= isset($_POST['cust_def_addr']['address1']) ? $_POST['cust_def_addr']['address1'] : ''; ?>"
-                                                       data-empty="<?= (isset($_POST['cust_def_addr']['address1']) && !empty($_POST['cust_def_addr']['address1'])) ? 'false' : 'true'; ?>"
+                                                       value="<?= isset($ac_data->ac_shipping_address) ? $ac_data->ac_shipping_address : ''; ?>"
+                                                       data-empty="<?= (isset($ac_data->ac_shipping_address) && !empty($ac_data->ac_shipping_address)) ? 'false' : 'true'; ?>"
                                                        placeholder="">
                                                 <span>Address</span>
                                             </label>
@@ -1348,8 +1348,8 @@ $qa_cart_link = "/cart";
                                             <label for="shipping_address2" class="uni-form-input">
                                                 <input type="text" id="shipping_address2" name="shipping[address2]"
                                                        class="form-control" autocomplete="shipping address-line2"
-                                                       value="<?= isset($_POST['cust_def_addr']['address2']) ? $_POST['cust_def_addr']['address2'] : ''; ?>"
-                                                       data-empty="<?= (isset($_POST['cust_def_addr']['address2']) && !empty($_POST['cust_def_addr']['address2'])) ? 'false' : 'true'; ?>">
+                                                       value="<?= isset($ac_data->ac_shipping_address2) ? $ac_data->ac_shipping_address2 : ''; ?>"
+                                                       data-empty="<?= (isset($ac_data->ac_shipping_address2) && !empty($ac_data->ac_shipping_address2)) ? 'false' : 'true'; ?>">
                                                 <span>Apartment, suite, etc. (optional)</span>
                                             </label>
                                         </div>
@@ -1357,8 +1357,8 @@ $qa_cart_link = "/cart";
                                             <label for="shipping_city" class="uni-form-input">
                                                 <input type="text" id="shipping_city" name="shipping[city]" class="form-control"
                                                        autocomplete="shipping address-level2"
-                                                       value="<?= isset($_POST['cust_def_addr']['city']) ? $_POST['cust_def_addr']['city'] : ''; ?>"
-                                                       data-empty="<?= (isset($_POST['cust_def_addr']['city']) && !empty($_POST['cust_def_addr']['city'])) ? 'false' : 'true'; ?>">
+                                                       value="<?= isset($ac_data->ac_shipping_city) ? $ac_data->ac_shipping_city : ''; ?>"
+                                                       data-empty="<?= (isset($ac_data->ac_shipping_city) && !empty($ac_data->ac_shipping_city)) ? 'false' : 'true'; ?>">
                                                 <span>City</span>
                                             </label>
                                         </div>
@@ -1377,8 +1377,8 @@ $qa_cart_link = "/cart";
                                             <label for="shipping_pincode" class="uni-form-input">
                                                 <input type="text" id="shipping_pincode" name="shipping[pincode]"
                                                        class="form-control" autocomplete="shipping postal-code"
-                                                       value="<?= isset($vendor_zip) ? $vendor_zip : ''; ?>"
-                                                       data-empty="<?= (isset($vendor_zip) && !empty($vendor_zip)) ? 'false' : 'true'; ?>"
+                                                       value="<?= isset($ac_data->ac_shipping_pincode) ? $ac_data->ac_shipping_pincode : ''; ?>"
+                                                       data-empty="<?= (isset($ac_data->ac_shipping_pincode) && !empty($ac_data->ac_shipping_pincode)) ? 'false' : 'true'; ?>"
                                                         >
                                                 <span>ZIP Code</span>
                                             </label>
@@ -1388,8 +1388,8 @@ $qa_cart_link = "/cart";
                                                 <input type="text" id="phone" name="phone" class="form-control"
                                                        autocomplete="shipping phone"
                                                        data-mask="(000) 000-0000"
-                                                       value="<?= isset($_POST['cust_mobile']) ? $_POST['cust_mobile'] : ''; ?>"
-                                                       data-empty="<?= (isset($_POST['cust_mobile']) && !empty($_POST['cust_mobile'])) ? 'false' : 'true'; ?>">
+                                                       value="<?= isset($ac_data->ac_customer_phone) ? $ac_data->ac_customer_phone : ''; ?>"
+                                                       data-empty="<?= (isset($ac_data->ac_customer_phone) && !empty($ac_data->ac_customer_phone)) ? 'false' : 'true'; ?>">
                                                 <span>Phone</span>
                                                 <div class="field__icon">
                                                     <div class="tooltip-container">
@@ -1776,7 +1776,7 @@ $qa_cart_link = "/cart";
 
 
                                         <input type="hidden" name="customer_id" id="customer_id"
-                                               value="<?= isset($_POST['cust_id']) ? $_POST['cust_id'] : '' ?>" />
+                                               value="<?= isset($ac_data->ac_customer_id) ? $ac_data->ac_customer_id : '' ?>" />
                                         <input type="hidden" name="note" id="note"
                                                value="<?= isset($_POST['note']) ? $_POST['note'] : '' ?>" />
                                         <input type="hidden" name="cust_ws_tag" id="cust_ws_tag"
@@ -1801,7 +1801,7 @@ $qa_cart_link = "/cart";
                                         <input type="hidden" name="checkout_id" id="checkout_id" value="" />
 
                                         <input type="hidden" id="card-nonce" name="nonce">
-                                        <input type="hidden" name="allow_net30" value="<?=@$_POST['allow_net30']?>">
+                                        <input type="hidden" name="allow_net30" value="<?= isset($_POST['allow_net30']) ? $_POST['allow_net30'] : '' ?>">
 
                                         <?php
                                         if (isset($cs_data->cs_age_verification_require) && $cs_data->cs_age_verification_require == 'required') {

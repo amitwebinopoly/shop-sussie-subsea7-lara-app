@@ -118,7 +118,7 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
                                     lookup.administrative_area_level_1.value = val;
                                     state = val;
                                     break;
-                                    <?php if (!isset($_POST['cust_def_addr']['country_code']) || empty($_POST['cust_def_addr']['country_code'])) { ?>
+                                    <?php if (!isset($ac_data->ac_shipping_country) || empty($ac_data->ac_shipping_country)) { ?>
                                 case 'country':
                                     lookup.country.value = (val.length > 2 ? getCountryValByCountryName(val, lookup
                                             .country) : val);
@@ -261,7 +261,7 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
             $('#shipping_pincode').attr('disabled', false);
             //$('#shipping_country_div').addClass('col-3');
 
-            var default_state = '<?php echo isset($_POST['cust_def_addr']['province_code'])?$_POST['cust_def_addr']['province_code']:"" ?>';
+            var default_state = '<?php echo isset($ac_data->ac_shipping_state)?$ac_data->ac_shipping_state:"" ?>';
             $.each(states, function(i, state) {
                 var $myopt = $("<option></option>");
                 $myopt.attr("value", state.code);
