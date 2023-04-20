@@ -305,6 +305,7 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
 
         var $email = $('#checkout_email');
         var $phone = $('#phone');
+        var $po_number = $('#po_number');
 
         if ($email.val() == "") {
             $('<p class="error-msg">Please enter an email</p>').insertAfter($email.parent('label'));
@@ -323,6 +324,12 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
             errCnt++;
         }
         <?php }?>
+
+        if ($po_number.val() == "") {
+            $('<p class="error-msg">Please enter Cost Center Number</p>').insertAfter($po_number.parent('label'));
+            $po_number.parents('.form-group').addClass('field--error');
+            errCnt++;
+        }
 
         var $sfname = $('#shipping_first_name');
         var $slname = $('#shipping_last_name');
@@ -1490,7 +1497,7 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
 
 <script type="text/javascript">
     $('#complete-order-btn').click(async function(e) {
-        if (validateCustomerInfo() && validateBillingInfo()) {
+        if (validateCustomerInfo() && validateBillingInfo() && checkDepartmentInfo()) {
             $('#complete-order-btn').attr('disabled', true);
             $('#complete-order-btn span').hide();
             $('#complete-order-btn i').show();
@@ -1500,8 +1507,7 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
     });
 
     function submitForm() {
-        var url = SITEURL + '/' + $("#checkout-frm").attr('action');
-
+        var url = '/{{$proxy_path}}/api/process_checkout';
 
         $('#verify_age_complete_order span').hide();
         $('#verify_age_complete_order i').show();
@@ -1905,6 +1911,41 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
             return true;
         }
     }
+    function checkDepartmentInfo() {
+        var department_1 = $("#department_1").val();
+        var err = 0;
+        var err_msg = '';
+
+        if (department_1 == '') {
+            err++; err_msg += 'Please select department.<br>';
+        }
+
+        if (err_msg != '') {
+            $("#department_amount_msg").html(err_msg);
+        } else {
+            $("#department_amount_msg").html('');
+        }
+
+        if (err == 0) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+    $("#department_1").change(function () {
+        var selected_option = $('option:selected', "#department_1");
+        var fa = selected_option.data('firstapprover');
+        var sa = selected_option.data('secondapprover');
+        $("#first_approver_1").val(fa);
+        $("#second_approver_1").val(sa);
+        if (selected_option.val() == '') {
+            $("#department_amount_1").val('').attr('disabled', true);
+        } else {
+            $("#department_amount_1").removeAttr('disabled');
+        }
+    });
+
     $("#verify_age_complete_order").click(async function() {
         var errCnt = 0;
         $('.form-group .error-msg').remove();

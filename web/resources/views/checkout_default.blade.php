@@ -190,9 +190,9 @@ $qa_cart_link = "/cart";
             background-color: #cccccc !important;
         }
         #continue_to_ship_method_btn, #cont_to_pay_method, #complete-order-btn {
-            background-color: #ebaf5a !important;
+            /*background-color: #ebaf5a !important;*/
             border: 1px transparent solid;
-            color: #2f2312 !important;
+            /*color: #2f2312 !important;*/
             border-radius: 0;
             text-transform: uppercase;
             font-weight: 700;
@@ -1246,6 +1246,14 @@ $qa_cart_link = "/cart";
                                     </div>
                                     <?php } ?>
 
+
+                                    <div class="form-group">
+                                        <label for="po_number" class="uni-form-input">
+                                            <input type="text" id="po_number" name="po_number" class="form-control" autocomplete="shipping po_number" value="" data-empty="true">
+                                            <span>Cost Center Number</span>
+                                        </label>
+                                    </div>
+
                                 </div>
 
                                 <div class="section section--shipping-address">
@@ -1620,10 +1628,39 @@ $qa_cart_link = "/cart";
 
                             <div class="section section--payment-detail">
                                 <div class="form-group">
-                                    <h2 class="sec-title"> Confirm your date of birth </h2>
-                                    <span class="dob-text" id="dob_text">You must be 21+ to finalize payment</span>
-                                    <label for="customer_dob_confirmation" class="uni-form-input">
-                                        <input type="date" format="mm/dd/yyyy" name="customer_dob_confirmation" id="customer_dob_confirmation" placeholder="MM/DD/YYYY"  class="form-control" required data-empty="true">
+                                    <h2 class="sec-title"> Select your order Approver </h2>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 15px;margin-top: 10px;">
+                                    <div class="uni-form-input select">
+                                        <span>Approver</span>
+                                        <input type="hidden" name="first_approver_1" id="first_approver_1" value="">
+                                        <input type="hidden" name="second_approver_1" id="second_approver_1" value="">
+                                        <select name="department_1" id="department_1" class="form-control" required="">
+                                            <option data-firstapprover="" data-secondapprover="" value=""></option>
+                                            <option data-firstapprover="david.barnes@subsea7.com" data-secondapprover="" value="Barnes, David">Barnes, David</option>
+                                            <option data-firstapprover="craig.broussard@subsea7.com" data-secondapprover="" value="Broussard, Craig">Broussard, Craig</option>
+                                            <option data-firstapprover="laura.butler@subsea7.com" data-secondapprover="" value="Butler, Laura">Butler, Laura</option>
+                                            <option data-firstapprover="steven.shakespeare@subsea7.com" data-secondapprover="" value="Shakespeare, Steven">Shakespeare, Steven</option>
+                                            <option data-firstapprover="thomas.tottenjr@subsea7.com" data-secondapprover="" value="Totten Jr, Thomas">Totten Jr, Thomas</option>
+                                            <option data-firstapprover="matthias.vernier@subsea7.com" data-secondapprover="" value="Vernier, Matthias">Vernier, Matthias</option>
+                                            <option data-firstapprover="james.ward@subsea7.com" data-secondapprover="" value="Ward, James">Ward, James</option>
+                                            <option data-firstapprover="jeremy.woulds@subsea7.com" data-secondapprover="" value="Woulds, Jeremy">Woulds, Jeremy</option>
+                                            <!--<option data-firstapprover="sweta@webinopoly.com" data-secondapprover="" value="Sweta">Sweta</option>
+                                        <option data-firstapprover="amit.webinopoly@gmail.com" data-secondapprover="" value="Amit">Amit</option>-->
+                                            <option data-firstapprover="shawna@mycorporateexpressions.com" data-secondapprover="" value="Store Admin">*Store Admin – Do Not Use</option>
+                                        </select>
+                                        <div class="field__caret">
+                                            <svg class="icon-svg icon-svg--color-adaptive-lighter icon-svg--size-10 field__caret-svg" role="presentation" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0 3h10L5 8" fill-rule="nonzero"></path></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin-left: 0;">
+                                    <p style="float: right; color: red;" id="department_amount_msg"></p>
+                                </div>
+
+                                <div class="form-group" style="margin-left: 15px;">
+                                    <label for="additional_note" class="uni-form-input">
+                                        <textarea name="additional_note" id="additional_note" class="form-control" placeholder="Comment/Note"></textarea>
                                     </label>
                                 </div>
                             </div>
@@ -1817,7 +1854,7 @@ $qa_cart_link = "/cart";
                                             <span>Complete Order</span>
                                             <i class="btn__spinner icon icon--button-spinner">
                                                 <img
-                                                        src="<?= $checkout_assets_url ?>/images/checkout/eclipse_ajax.gif" />
+                                                        src="<?= $checkout_assets_url ?>/images/eclipse_ajax.gif" />
                                             </i>
                                         </button>
                                         <button class="submit btn" type="button" id="complete_age_verification_btn"
@@ -1855,7 +1892,7 @@ $qa_cart_link = "/cart";
                                         <div class="product-thumbnail">
                                             <div class="product-thumbnail__wrapper">
                                                 <img alt=""
-                                                     src="<?= $item['image'] != '' ? $item['image'] : $checkout_assets_url . '/images/checkout/no-image.gif' ?>" />
+                                                     src="<?= $item['image'] != '' ? $item['image'] : $checkout_assets_url . '/images/no-image.gif' ?>" />
                                             </div>
 											<span
                                                     class="quantity"><?= $item['quantity'] ?></span>
@@ -2016,7 +2053,7 @@ $qa_cart_link = "/cart";
                                         <span class="af_after_loading">Apply</span>
                                         <i class="btn__spinner icon icon--button-spinner" style="display: none;">
                                             <img
-                                                    src="<?= $checkout_assets_url ?>/images/checkout/eclipse_ajax.gif" />
+                                                    src="<?= $checkout_assets_url ?>/images/eclipse_ajax.gif" />
                                         </i>
                                     </button>
                                     <span style="display:block;" id="giftcard-msg"></span>
@@ -2290,7 +2327,7 @@ $qa_cart_link = "/cart";
                                 } ?></span>
                             <i class="btn__spinner icon icon--button-spinner" style="display: none;">
                                 <img
-                                        src="<?= $checkout_assets_url ?>/images/checkout/eclipse_ajax.gif" />
+                                        src="<?= $checkout_assets_url ?>/images/eclipse_ajax.gif" />
                             </i>
                         </button>
                     </p>
@@ -2303,7 +2340,7 @@ $qa_cart_link = "/cart";
     </form>
 </main>
 
-@include('checkout_default_footer');
+@include('checkout_default_footer')
 
 </body>
 

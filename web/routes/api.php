@@ -41,4 +41,5 @@ Route::middleware([EnsureFrontendShopAuth::class])->group(function () {
     Route::post('/store_abondoned_steps',[ FrontEndController::class,'store_abondoned_steps']);
     Route::post('/apply_discount_in_checkout',[ FrontEndController::class,'apply_discount_in_checkout']);
     Route::post('/remove_discount_in_checkout',[ FrontEndController::class,'remove_discount_in_checkout']);
+    Route::post('/process_checkout',[ FrontEndController::class,'process_checkout']);
 });
