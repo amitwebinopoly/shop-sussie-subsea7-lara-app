@@ -150,7 +150,7 @@ class FrontEndController extends Controller {
 				// get store data from shopify
 				$result = $rest_client->get('shop');
 				$shopData = $result->getDecodedBody();
-				if(isset($shopData['taxes_included']) && $shopData['taxes_included']==false){
+				if(isset($shopData['shop']['taxes_included']) && $shopData['shop']['taxes_included']==false){
 					$need_to_calculate_tax = 'Yes';
 				}else{
 					$need_to_calculate_tax = 'No';
@@ -647,6 +647,620 @@ class FrontEndController extends Controller {
 		}else{
 			$res['success'] = 'false';
 			$res['message'] = 'Invalid request.';
+		}
+
+		echo json_encode($res,1);
+
+	}
+	public function process_checkout(Request $request){
+		$AbandonedCheckoutModel = new AbandonedCheckoutModel();
+
+		$res = [];
+		$shop_db_data = $request->get('shop_db_data'); // Provided by the EnsureFrontendShopAuth middleware
+
+		$shop = $shop_db_data['shop'];
+		$token = $shop_db_data['access_token'];
+		$storefront_access_token = $shop_db_data['storefront_access_token'];
+		$rest_client = new Rest($shop, $token);
+		$gql_client = new Graphql($shop, $token);
+
+		$headers = array(
+			//'X-Shopify-Access-Token' => $shopCred->access_token
+			'X-Shopify-Storefront-Access-Token' => $storefront_access_token
+		);
+		$GraphqlController = new GraphqlController($shop, $headers, true); //pass true for store front apis
+
+		$cart_total = 0;
+		$cart_subtotal = 0;
+		$cart_shipping_price = 0;
+		$cart_tax_price = 0;
+		$shipping_lines = '';
+		$discount_codes = '';
+		$discount_price = 0;
+
+		$post_cart = base64_decode($_POST['cart']);
+		$string = html_entity_decode($post_cart, ENT_QUOTES);
+		$cartInfo = json_decode($string,1);
+
+		$result = $rest_client->get('shop');
+		$shopData = $result->getDecodedBody();
+		if(isset($shopData['shop']['taxes_included']) && $shopData['shop']['taxes_included']==false){
+			$need_to_calculate_tax = 'Yes';
+		}else{
+			$need_to_calculate_tax = 'No';
+		}
+
+		if(isset($_POST['checkout_id']) && !empty($_POST['checkout_id'])){
+			$checkout_id = $_POST['checkout_id'];
+			$checkout_id_json = base64_decode($checkout_id);    // gid://shopify/Checkout/04c2c3ede4ae80cb2b258c101f4707e2?key=6813545e6115acbdd332712f07e7b773
+			$checkout_id_arr = explode('?',$checkout_id_json);  // ['gid://shopify/Checkout/04c2c3ede4ae80cb2b258c101f4707e2', 'key=6813545e6115acbdd332712f07e7b773']
+			$checkout_token = str_replace('gid://shopify/Checkout/','',$checkout_id_arr[0]);    // 04c2c3ede4ae80cb2b258c101f4707e2
+
+			$shopifyCheckoutResult = $rest_client->get('checkouts/'.$checkout_token);
+			$checkoutInfo = $shopifyCheckoutResult->getDecodedBody();
+
+			if(isset($checkoutInfo['checkout']) && !empty($checkoutInfo['checkout'])){
+				$checkoutInfo = $checkoutInfo['checkout'];
+				$checkout_gdata = $GraphqlController->get_shopify_checkout($checkout_id);
+				$item_wise_gdata = [];
+				if(isset($checkout_gdata['data']['node']['lineItems']['edges'])){
+					foreach($checkout_gdata['data']['node']['lineItems']['edges'] as $lineItem){
+						$variant_id = str_replace('gid://shopify/ProductVariant/','',$lineItem['node']['variant']['id']);
+						$item_wise_gdata[$variant_id][] = $lineItem;
+					}
+				}
+
+				//calculate subtotal
+				//$need_to_calculate_tax = 'No';
+				if(isset($checkoutInfo['line_items']) && !empty($checkoutInfo['line_items'])){
+					$c = 0;
+					foreach($checkoutInfo['line_items'] as $item){
+						$square_discount = [];
+						$subscription_discount = [];
+						/*if(isset($_POST['customer_id']) && !empty($_POST['customer_id']) && isset($_POST['cust_ws_tag']) && !empty($_POST['cust_ws_tag'])){
+							//fetch wholesale pricing discount
+							$ws_disc_data = Registry::get("WholesalePricing")->get_tag_product_discount($shop,$_POST['cust_ws_tag'],$item['product_id']);
+							if(!empty($ws_disc_data)){
+								$square_discount['cal_type'] = $ws_disc_data['cal_type'];
+								$square_discount['discount'] = $ws_disc_data['discount'];
+
+								if($ws_disc_data['cal_type']=='%'){
+									$item['price'] = $item['price'] - ($item['price']*$ws_disc_data['discount']/100);
+								}else if($ws_disc_data['cal_type']=='-'){
+									$item['price'] = $item['price'] - $ws_disc_data['discount'];
+								}
+							}
+						}
+						if(isset($item['properties']['_is_subs']) && $item['properties']['_is_subs']=='true' && isset($item['properties']['_subscription_discount']) && $item['properties']['_subscription_discount']>0){
+							$subscription_discount['cal_type'] = '%';
+							$subscription_discount['discount'] = $item['properties']['_subscription_discount'];
+							$item['price'] = $item['price'] - ($item['price']*$item['properties']['_subscription_discount']/100);
+						}*/
+						$checkoutInfo['line_items'][$c]['square_discount'] = $square_discount;
+						$checkoutInfo['line_items'][$c]['subscription_discount'] = $subscription_discount;
+
+						$cart_subtotal += bcdiv(($item['price'] * $item['quantity']),1,2);
+
+						if(isset($item['properties']) && !empty($item['properties'])){
+							foreach($item['properties'] as $prop_k=>$prop_v){
+								if($prop_k=='_is_subs' && $prop_v=='true'){
+									$_POST['_is_subs'] = 'true';
+								}
+							}
+						}
+
+						//check inventory
+						$query = 'query getProductVariant($id: ID!) {
+                              productVariant(id: $id){
+                                inventoryQuantity
+                                inventoryManagement
+                                inventoryPolicy
+                                product{ title } } }';
+						sleep(0.5);
+						$response = $gql_client->query(
+							[
+								"query" => $query,
+								"variables" => [
+									"id" => 'gid://shopify/ProductVariant/'.$item['variant_id'].''
+								]
+							]
+						);
+						$var_data = $response->getDecodedBody();
+						if(isset($var_data['data']['productVariant']['inventoryManagement']) && $var_data['data']['productVariant']['inventoryManagement']!='NOT_MANAGED'
+							&& isset($var_data['data']['productVariant']['inventoryPolicy']) && $var_data['data']['productVariant']['inventoryPolicy']=='DENY'
+						){
+							$available_inv_qty = $var_data['data']['productVariant']['inventoryQuantity'];
+							$pro_title = $var_data['data']['productVariant']['product']['title'];
+							if($item['quantity'] > $available_inv_qty){
+								//if purchase-qty is greater than available-qty
+								$res['success'] = 'false';
+								$res['message'] = $pro_title.' has not enough quantity. Available qty is '.$available_inv_qty;
+								echo json_encode($res,1);
+								exit;
+							}
+						}
+
+						$c++;
+					}
+				}
+				$cart_total = $cart_subtotal;
+
+				if(!empty($checkoutInfo['shipping_line'])){
+					$shipping_lines = $checkoutInfo['shipping_line'];
+				}
+
+				//calculate discount
+				if(isset($checkoutInfo['applied_discount']) && !empty($checkoutInfo['applied_discount'])){
+					if($checkoutInfo['applied_discount']['applicable']==true && $checkoutInfo['applied_discount']['amount']>0){
+						$discount_price = $checkoutInfo['applied_discount']['amount'];
+					}
+				}else{
+					if(isset($checkoutInfo['line_items']) && !empty($checkoutInfo['line_items'])){
+						foreach($checkoutInfo['line_items'] as $single_li){
+							if(isset($single_li['applied_discounts'][0]) && !empty($single_li['applied_discounts'][0]) && $single_li['applied_discounts'][0]['amount']>0){
+								$discount_price = $single_li['applied_discounts'][0]['amount'];
+							}
+						}
+					}
+				}
+				$cart_total = $cart_total-$discount_price;
+
+				//calculate shipping
+				$local_pickup_exist = 'No';
+				if(isset($_POST['shipping_lines']) && !empty($_POST['shipping_lines'])){
+					$sl_json = html_entity_decode($_POST['shipping_lines'], ENT_QUOTES);
+					$sl_arr = json_decode($sl_json,1);
+					if(isset($sl_arr['id']) && $sl_arr['id']=='local-pickup-0.00'){
+						$local_pickup_exist = 'Yes';
+					}
+				}
+				if($local_pickup_exist=='No' && !empty($shipping_lines)){
+					if(isset($shipping_lines['price']) && !empty($shipping_lines['price'])){
+						$cart_shipping_price = $shipping_lines['price'];
+						$cart_total = $cart_total + $cart_shipping_price;
+					}
+				}
+
+				//calculate tax
+				if(isset($checkoutInfo['tax_lines']) && !empty($checkoutInfo['tax_lines']) && $need_to_calculate_tax=='Yes'){
+					if(!empty($checkoutInfo['tax_lines'])){
+						$c = 0;
+						foreach($checkoutInfo['tax_lines'] as $single_tax){
+							if(isset($single_tax['price']) && !empty($single_tax['price'])){
+								if(isset($_POST['cust_ws_tag']) && !empty($_POST['cust_ws_tag'])){
+									$single_tax_price = number_format($cart_total * $single_tax['rate'],'2','.','');
+									$cart_tax_price += floatval($single_tax_price);
+									$checkoutInfo['tax_lines'][$c]['price'] = $single_tax_price;// here we can get direct price in tax_line, but if square wholesale discount apply then we need to change tax-price based on product new price
+								}else{
+									$single_tax_price = $single_tax['price'];
+									$cart_tax_price += floatval($single_tax_price);
+								}
+							}
+							$c++;
+						}
+						$cart_tax_price = bcdiv($cart_tax_price,1,2);
+						$cart_total += floatval($cart_tax_price);
+					}
+				}
+
+				//calculate discount
+				if(isset($checkout_gdata['data']['node']['appliedGiftCards'][0]) && !empty($checkout_gdata['data']['node']['appliedGiftCards'][0])){
+					if($checkout_gdata['data']['node']['appliedGiftCards'][0]['presentmentAmountUsed']['amount'] > 0){
+						$giftcard_price = $checkout_gdata['data']['node']['appliedGiftCards'][0]['presentmentAmountUsed']['amount'];
+						$cart_total = $cart_total - $giftcard_price;
+					}
+				}
+
+				//Validate the payment form
+				/*if (!isset($_POST['nonce']) || empty($_POST['nonce'])) {
+					Filter::$msgs['card_data'] = 'Invalid card details';
+				}*/
+
+				//continue to checkout
+				$_POST['cart_total_price'] = number_format($cart_total,'2','.','');
+				$currency = (isset($_POST['shop_currency_name']) && !empty($_POST['shop_currency_name']))?$_POST['shop_currency_name']:"USD";
+				$rndm_num = rand(10000,99999).time();
+
+				if($cart_total>0){
+					//$paymentRes = SquarePayment::process_payment();
+					$paymentRes = [
+						'result' => 'success',
+						'transactionid' => 'txn_'.$rndm_num,
+						'orderid' => 'ord_'.$rndm_num,
+					];
+				}else{
+					$paymentRes = [
+						'result' => 'success',
+						'transactionid' => 'txn_'.$rndm_num,
+						'orderid' => 'ord_'.$rndm_num,
+					];
+				}
+
+				if ($paymentRes['result'] == 'success' && $paymentRes['transactionid'] != '') {
+
+					if(isset($_POST['email_marketing_subscribe']) && $_POST['email_marketing_subscribe'] == "1"){
+						$email_marketing_subscribe = 'true';
+					}else{
+						$email_marketing_subscribe = 'false';
+					}
+
+					$insertOrder = array(
+						'cart_token' => $cartInfo['token'],
+						'email' => $_POST['checkout_email'],
+						'note' => isset($_POST['note'])?$_POST['note']: $cartInfo['note'],
+						'total_price' => $_POST['cart_total_price'],
+						'subtotal_price' => $cart_subtotal,
+						'total_tax' => $cart_tax_price,
+						//'tags' => 'paid',
+						'currency' => $currency,
+						'financial_status' => 'paid',
+						'inventory_behaviour' => 'decrement_ignoring_policy',
+						//'confirmed' => true,
+						//'total_discounts' => isset(self::$payres['order']['total_discounts'])?self::$payres['order']['total_discounts']:0,
+						'send_receipt' => true,
+						'send_fulfillment_receipt' => true,
+
+						// 'buyer_accepts_marketing' => intval($_POST['email_marketing_subscribe'])? "true": "false",
+						'buyer_accepts_marketing' => $email_marketing_subscribe,
+						"metafields" => [
+							/*[
+								"key" => "transactionid",
+								'value' => $paymentRes['transactionid'],
+								'value_type' => 'string',
+								'namespace' => 'square_payment'
+							]*/
+						],
+						'note_attributes' => [
+							[
+								'name' => 'Cost Center Number',
+								'value' => ((isset($_POST['po_number']) && !empty($_POST['po_number']))?$_POST['po_number']:'---')
+							],
+							[
+								'name' => 'First Approver 1',
+								'value' => ((isset($_POST['first_approver_1']) && !empty($_POST['first_approver_1']))?$_POST['first_approver_1']:'---')
+							],
+							[
+								'name' => 'First Approver Status 1',
+								'value' => '---'
+							],
+							[
+								'name' => 'Approver name',
+								'value' => ((isset($_POST['department_1']) && !empty($_POST['department_1']))?$_POST['department_1']:'---')
+							],
+						],
+						'billing_address' => array(
+							'address1' => $_POST['billing']['address'],
+							'address2' => $_POST['billing']['address2'],
+							'city' => $_POST['billing']['city'],
+							'company' => isset($_POST['billing']['company'])?$_POST['billing']['company']:'',
+							'first_name' => $_POST['billing']['first_name'],
+							'last_name' => $_POST['billing']['last_name'],
+							'phone' => $_POST['phone'],
+							'zip' => $_POST['billing']['pincode'],
+							'country_code' => $_POST['billing']['country'],
+							'province_code' => $_POST['billing']['state'],
+							'default' => true
+						),
+						'shipping_address' => array(
+							'address1' => $_POST['shipping']['address'],
+							'address2' => $_POST['shipping']['address2'],
+							'city' => $_POST['shipping']['city'],
+							'company' => isset($_POST['shipping']['company'])?$_POST['shipping']['company']:'',
+							'first_name' => $_POST['shipping']['first_name'],
+							'last_name' => $_POST['shipping']['last_name'],
+							'phone' => $_POST['phone'],
+							'zip' => $_POST['shipping']['pincode'],
+							'country_code' => $_POST['shipping']['country'],
+							'province_code' => $_POST['shipping']['state']
+						),
+						'payment_gateway_names' => array(
+							0 => 'custom'
+						),
+						'processing_method' => 'direct',
+						'referring_site' => ''
+					);
+					if($_POST['cart_total_price']>0){
+						$insertOrder['transactions'] = array(
+							array(
+								'amount' => $_POST['cart_total_price'],
+								"gateway" => "manual",
+								'kind' => 'sale'
+							)
+						);
+					}
+
+					if(isset($_POST['cart_attributes']) && !empty($_POST['cart_attributes'])){
+						$cart_attributes_arr = json_decode(html_entity_decode($_POST['cart_attributes'], ENT_QUOTES),1);
+						if(!empty($cart_attributes_arr)){
+							foreach($cart_attributes_arr as $k=>$v){
+								$tmp_arr = [];
+								$tmp_arr['name'] = $k;
+								$tmp_arr['value'] = $v;
+								array_push($insertOrder['note_attributes'],$tmp_arr);
+							}
+						}
+					}
+					if(isset($_POST['additional_note']) && !empty($_POST['additional_note'])){
+						$tmp_arr = [];
+						$tmp_arr['name'] = 'Additional Note';
+						$tmp_arr['value'] = $_POST['additional_note'];
+						array_push($insertOrder['note_attributes'],$tmp_arr);
+					}
+
+					if(isset($_POST['birthdate_1']) && !empty($_POST['birthdate_1'])
+						&& isset($_POST['birthmonth_1']) && !empty($_POST['birthmonth_1'])
+						&& isset($_POST['birthyear_1']) && !empty($_POST['birthyear_1'])
+					){
+						$full_bday = $_POST['birthmonth_1'].'/'.$_POST['birthdate_1'].'/'.$_POST['birthyear_1'];
+
+						$na = [ 'name' => 'birthDay', 'value' => (string)intval($_POST['birthdate_1']) ];
+						array_push($insertOrder['note_attributes'],$na);
+
+						$na = [ 'name' => 'birthMonth', 'value' => (string)intval($_POST['birthmonth_1']) ];
+						array_push($insertOrder['note_attributes'],$na);
+
+						$na = [ 'name' => 'birthYear', 'value' => (string)intval($_POST['birthyear_1']) ];
+						array_push($insertOrder['note_attributes'],$na);
+
+						$na = [ 'name' => 'birthdate', 'value' => date('D M d Y',strtotime($full_bday)) ];
+						array_push($insertOrder['note_attributes'],$na);
+
+						$sec = abs(time()-strtotime($full_bday));
+						$age = intval($sec / (3600*24*365));    //here we need full number without decimal, so intval used
+						$na = [ 'name' => 'age', 'value' => (string)$age ];
+						array_push($insertOrder['note_attributes'],$na);
+					}
+					if(isset($_POST['birthdate_2']) && !empty($_POST['birthdate_2'])
+						&& isset($_POST['birthmonth_2']) && !empty($_POST['birthmonth_2'])
+						&& isset($_POST['birthyear_2']) && !empty($_POST['birthyear_2'])
+					){
+						$full_bday = $_POST['birthmonth_2'].'/'.$_POST['birthdate_2'].'/'.$_POST['birthyear_2'];
+
+						$na = [ 'name' => 'billing_birthDay', 'value' => (string)intval($_POST['birthdate_2']) ];
+						array_push($insertOrder['note_attributes'],$na);
+
+						$na = [ 'name' => 'billing_birthMonth', 'value' => (string)intval($_POST['birthmonth_2']) ];
+						array_push($insertOrder['note_attributes'],$na);
+
+						$na = [ 'name' => 'billing_birthYear', 'value' => (string)intval($_POST['birthyear_2']) ];
+						array_push($insertOrder['note_attributes'],$na);
+
+						$na = [ 'name' => 'billing_birthdate', 'value' => date('D M d Y',strtotime($full_bday)) ];
+						array_push($insertOrder['note_attributes'],$na);
+
+						$sec = abs(time()-strtotime($full_bday));
+						$age = intval($sec / (3600*24*365));    //here we need full number without decimal, so intval used
+						$na = [ 'name' => 'billing_age', 'value' => (string)$age ];
+						array_push($insertOrder['note_attributes'],$na);
+					}
+					if(isset($_POST['ssn_number1']) && !empty($_POST['ssn_number1'])){
+						$na = [
+							'name' => 'ssn_number',
+							'value' => $_POST['ssn_number1']
+						];
+						array_push($insertOrder['note_attributes'],$na);
+					}
+					if(isset($_POST['ssn_number2']) && !empty($_POST['ssn_number2'])){
+						$na = [
+							'name' => 'billing_ssn_number',
+							'value' => $_POST['ssn_number2']
+						];
+						array_push($insertOrder['note_attributes'],$na);
+					}
+
+					/*if(isset($checkout_gdata['data']['node']['appliedGiftCards'][0]) && !empty($checkout_gdata['data']['node']['appliedGiftCards'][0])){
+                        if($checkout_gdata['data']['node']['appliedGiftCards'][0]['presentmentAmountUsed']['amount'] > 0){
+                            $giftcard_price = $checkout_gdata['data']['node']['appliedGiftCards'][0]['presentmentAmountUsed']['amount'];
+                            $insertOrder['transactions'][] = array(
+                                'amount' => $giftcard_price,
+                                "gateway" => "gift_card",
+                                'kind' => 'sale',
+                                "status" => "success",
+                                "gift_card_id" => str_replace('gid://shopify/AppliedGiftCard/','',base64_decode($checkout_gdata['data']['node']['appliedGiftCards'][0]['id'])),
+                                "receipt" => [
+                                    "gift_card_id" => str_replace('gid://shopify/AppliedGiftCard/','',base64_decode($checkout_gdata['data']['node']['appliedGiftCards'][0]['id'])),
+                                    //"gift_card_last_characters" => $checkout_gdata['data']['node']['appliedGiftCards'][0]['lastCharacters']
+                                ]
+                            );
+                        }
+                    }*/
+
+					$customer = array(
+						"accepts_marketing" => true,
+						"email" => $_POST['checkout_email']
+					);
+					$insertOrder['customer'] = $customer;
+
+					//$need_to_calculate_tax = 'No';
+					$sq_ttl_discount = 0;
+					$subs_ttl_discount = 0;
+					$lineItems = array();
+					if (isset($checkoutInfo['line_items']) && !empty($checkoutInfo['line_items']) && count($checkoutInfo['line_items']) > 0) {
+
+						foreach ($checkoutInfo['line_items'] as $lkey => $lval) {
+							$item_total_discount = 0;
+							if(isset($item_wise_gdata[$lval['variant_id']])){
+								$dd = array_shift($item_wise_gdata[$lval['variant_id']]);
+							}
+
+							if(isset($dd['node']['discountAllocations'][0]['allocatedAmount']['amount'])){
+								$item_total_discount = $dd['node']['discountAllocations'][0]['allocatedAmount']['amount'];
+							}else if(isset($lval['square_discount']['discount']) && !empty($lval['square_discount']['discount'])){
+								if($lval['square_discount']['cal_type']=='%'){
+									$item_total_discount = ($lval['price']*$lval['square_discount']['discount']/100)*$lval['quantity'];
+									$sq_ttl_discount += $item_total_discount;
+								}else if($lval['square_discount']['cal_type']=='-'){
+									$item_total_discount = $lval['square_discount']['discount']*$lval['quantity'];
+									$sq_ttl_discount += $item_total_discount;
+								}
+							}else if(isset($lval['subscription_discount']['discount']) && !empty($lval['subscription_discount']['discount'])){
+								if($lval['subscription_discount']['cal_type']=='%'){
+									$item_total_discount = ($lval['price']*$lval['subscription_discount']['discount']/100)*$lval['quantity'];
+									$subs_ttl_discount += $item_total_discount;
+								}else if($lval['subscription_discount']['cal_type']=='-'){
+									$item_total_discount = $lval['subscription_discount']['discount']*$lval['quantity'];
+									$subs_ttl_discount += $item_total_discount;
+								}
+							}
+							$lineItems [] = array(
+								'variant_id' => $lval['variant_id'],
+								'quantity' => $lval['quantity'],
+								'price' => $lval['price'],
+								'properties' => (array) $lval['properties'],
+								'total_discount' => number_format($item_total_discount,'2','.','')
+							);
+							/*if(isset($lval['taxable']) && $lval['taxable']==true){
+                                $need_to_calculate_tax = 'Yes';
+                            }*/
+						}
+						$insertOrder['line_items'] = $lineItems;
+					}
+
+					//add discount
+					$discounts = array();
+					if (isset($checkoutInfo['applied_discount']) && !empty($checkoutInfo['applied_discount'])) {
+						$discounts[] = array(
+							'amount' => $checkoutInfo['applied_discount']['amount'],
+							'code' => $checkoutInfo['applied_discount']['title'],
+							'type' => 'fixed_amount'    //don't change fixed_amount dynamic
+						);
+						$insertOrder['discount_codes'] = $discounts;
+					}else{
+						if(isset($checkoutInfo['line_items']) && !empty($checkoutInfo['line_items'])){
+							foreach($checkoutInfo['line_items'] as $single_li){
+								if(isset($single_li['applied_discounts'][0]) && !empty($single_li['applied_discounts'][0]) && $single_li['applied_discounts'][0]['amount']>0){
+									$discounts[] = array(
+										'amount' => $single_li['applied_discounts'][0]['amount'],
+										'code' => $single_li['applied_discounts'][0]['description'],
+										'type' => 'fixed_amount'    //don't change fixed_amount dynamic
+									);
+									$insertOrder['discount_codes'] = $discounts;
+								}
+							}
+						}
+					}
+					if(isset($checkout_gdata['data']['node']['appliedGiftCards'][0]) && !empty($checkout_gdata['data']['node']['appliedGiftCards'][0])){
+						if($checkout_gdata['data']['node']['appliedGiftCards'][0]['presentmentAmountUsed']['amount'] > 0){
+							$giftcard_price = $checkout_gdata['data']['node']['appliedGiftCards'][0]['presentmentAmountUsed']['amount'];
+							$discounts[] = array(
+								'amount' => $giftcard_price,
+								'code' => 'Gift card - xxxx '.$checkout_gdata['data']['node']['appliedGiftCards'][0]['lastCharacters'],
+								'type' => 'fixed_amount'    //don't change fixed_amount dynamic
+							);
+							$insertOrder['discount_codes'] = $discounts;
+						}
+					}
+					if(!empty($sq_ttl_discount) && $sq_ttl_discount>0){
+						$discounts[] = array(
+							'amount' => $sq_ttl_discount,
+							'code' => 'Wholesale Discount',
+							'type' => 'fixed_amount'    //don't change fixed_amount dynamic
+						);
+						$insertOrder['discount_codes'] = $discounts;
+					}else if(!empty($subs_ttl_discount) && $subs_ttl_discount>0){
+						$discounts[] = array(
+							'amount' => $subs_ttl_discount,
+							'code' => 'Subscription Discount',
+							'type' => 'fixed_amount'    //don't change fixed_amount dynamic
+						);
+						$insertOrder['discount_codes'] = $discounts;
+					}
+
+					//shipping
+					$shippingsArr = array();
+					$local_pickup_exist = 'No';
+					$free_shipping_exist = 'No';
+					if(isset($_POST['shipping_lines']) && !empty($_POST['shipping_lines'])){
+						$sl_json = html_entity_decode($_POST['shipping_lines'], ENT_QUOTES);
+						$sl_arr = json_decode($sl_json,1);
+						if(isset($sl_arr['id']) && $sl_arr['id']=='local-pickup-0.00'){
+							$local_pickup_exist = 'Yes';
+							$shippingsArr[] = array(
+								'price' => $sl_arr['price'],
+								'title' => $sl_arr['title']
+							);
+							$insertOrder['shipping_lines'] = $shippingsArr;
+						}else if(isset($sl_arr['id']) && $sl_arr['id']=='free-shipping-0.00'){
+							$free_shipping_exist = 'Yes';
+							$shippingsArr[] = array(
+								'price' => $sl_arr['price'],
+								'title' => $sl_arr['title']
+							);
+							$insertOrder['shipping_lines'] = $shippingsArr;
+						}
+					}
+					if ( ($local_pickup_exist=='No' && $free_shipping_exist=='No') && !empty($checkoutInfo['shipping_line']) && count($checkoutInfo['shipping_line']) > 0) {
+						$shippingsArr[] = array(
+							'price' => $checkoutInfo['shipping_line']['price'],
+							'title' => $checkoutInfo['shipping_line']['title']
+						);
+						$insertOrder['shipping_lines'] = $shippingsArr;
+					}
+
+					//taxlines
+					$taxArr = array();
+					if (!empty($checkoutInfo['tax_lines']) != '' && count($checkoutInfo['tax_lines']) > 0/* && $need_to_calculate_tax=='Yes'*/) {
+						foreach($checkoutInfo['tax_lines'] as $single_tl){
+							$taxArr[] = array(
+								'title' => $single_tl['title'],
+								'price' => $single_tl['price'],
+								'rate' => floatval($single_tl['rate'])
+							);
+						}
+						$insertOrder['tax_lines'] = $taxArr;
+					}
+
+					if(isset($shopData['taxes_included']) && $shopData['taxes_included']==true){
+						$insertOrder['taxes_included'] = $shopData['taxes_included'];
+					}
+
+					//create order
+					$shopifyOrderResult = $rest_client->post('orders',['order'=>$insertOrder]);
+					$lastorder = $shopifyOrderResult->getDecodedBody();
+
+					if (isset($lastorder['order']['id'])) {
+						//manage payment log
+						//$_POST['pl_id'] = Registry::get("SquarePayment")->manage_payment_log(self::$payres['transactionid'],$lastorder['id'],'','1','1');
+
+						//if abandoned-checkout token exist then delete it from database
+						if(isset($_POST['ac_token']) && !empty($_POST['ac_token'])){
+							$AbandonedCheckoutModel->delete_abandoned_checkout_by_token($_POST['ac_token']);
+						}
+						//track data in klaviyo
+						//Registry::get("Order")->create_klaviyo_tracking($shop_url,$lastorder);
+
+						/*if(isset(self::$payres['square_customer']['square_customer_id']) && !empty(self::$payres['square_customer']['square_customer_id']) &&
+							isset(self::$payres['square_customer']['square_customer_card_id']) && !empty(self::$payres['square_customer']['square_customer_card_id'])
+						){
+							Registry::get("Order")->subscription_data_entry_in_db($lastorder,self::$payres);
+						}*/
+
+						$res['success'] = 'true';
+						$res['message'] = '';
+						$res['data'] = [
+							'thankyou_page' => $lastorder['order']['order_status_url'],
+							'shop_order_id' => $lastorder['order']['id'],
+							'shop_order_number' => $lastorder['order']['order_number'],
+							'shop_order_total_price' => $lastorder['order']['total_price'],
+							'shop_order_total_tax' => $lastorder['order']['total_tax'],
+							'shop_order_total_shipping' => @$lastorder['order']['total_shipping_price_set']['shop_money']['amount'],
+							'shop_order_promocode' => @$lastorder['order']['discount_codes'][0]['code']
+						];
+					}
+				}
+				else{
+					$res['success'] = 'false';
+					$res['message'] = 'Something went wrong while payment creation. Please ask to store owner for more details.';
+				}
+
+			}else{
+				$res['success'] = 'false';
+				$res['message'] = 'Checkout details are not found.';
+			}
+		}
+		else{
+			$res['success'] = 'false';
+			$res['message'] = 'Checkout details are not found.';
 		}
 
 		echo json_encode($res,1);

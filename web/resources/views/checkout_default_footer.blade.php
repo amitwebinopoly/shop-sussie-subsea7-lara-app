@@ -1519,8 +1519,8 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
             url: url,
             dataType: 'json',
             data: $("#checkout-frm").serialize(),
-            success: function(data) {
-                if (data.type == 'success') {
+            success: function(obj) {
+                if (obj.success == 'true') {
                     $.ajax({
                         type: "POST",
                         url: '/cart/clear.js',
@@ -1528,18 +1528,18 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
                         success: function() {}
                     });
                     setTimeout(function() {
-                        location.href = data.thankyou_url;
+                        location.href = obj.data.thankyou_page;
                     }, 2000);
-                    google_ana_purchase_done(data.shop_order_id,
+                    google_ana_purchase_done(obj.data.shop_order_id,
                             '<?=$shop?>',
-                            data.shop_order_total_price, data.shop_order_total_tax, data
-                                    .shop_order_total_shipping, data.shop_order_promocode);
+                            obj.data.shop_order_total_price, obj.data.shop_order_total_tax,
+                            obj.data.shop_order_total_shipping, obj.data.shop_order_promocode);
                 } else {
-                    $("#payment_error_msg").html(decodeEntities(data.message));
-                    $("#payment_error_div").show();
-                    $('html, body').animate({
-                        scrollTop: $("#payment_error_div").offset().top
-                    }, 500);
+                    Swal.fire({
+                        title: '',
+                        text: decodeEntities(obj.message),
+                        icon: 'error'
+                    });
 
                     $('#complete-order-btn i').hide();
                     $('#complete-order-btn span').show();
@@ -1761,10 +1761,8 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
 
     $("#complete_age_verification_btn").click(function() {
         if (validateBillingInfo()) {
-            $("#av_bday_name1").html($('#shipping_first_name').val().trim() + ' ' + $('#shipping_last_name').val()
-                    .trim());
-            $("#av_bday_name2").html($('#billing_first_name').val().trim() + ' ' + $('#billing_last_name').val()
-                    .trim());
+            $("#av_bday_name1").html($('#shipping_first_name').val().trim() + ' ' + $('#shipping_last_name').val().trim());
+            $("#av_bday_name2").html($('#billing_first_name').val().trim() + ' ' + $('#billing_last_name').val().trim());
             if ($("#av_ssn_name1").length > 0) {
                 $("#av_ssn_name1").html($('#shipping_first_name').val().trim() + ' ' + $('#shipping_last_name')
                         .val().trim());
@@ -1905,7 +1903,6 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
 
             <?php }?>
         }
-
 
         if (errCnt == 0) {
             return true;

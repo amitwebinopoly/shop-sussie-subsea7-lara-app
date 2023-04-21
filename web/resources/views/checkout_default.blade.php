@@ -1011,6 +1011,24 @@ $qa_cart_link = "/cart";
         .swal-footer {
             text-align: center !important;
         }
+        textarea.form-control {
+            background-color: transparent;
+            display: block;
+            float: none;
+            height: auto;
+            line-height: 1.8;
+            margin: 0;
+            width: 100%;
+            box-shadow: none;
+            position: relative;
+            z-index: 1;
+            font-weight: 400;
+            border: none;
+            -webkit-box-shadow: 0 0 0 1px #bababa;
+            box-shadow: 0 0 0 1px #bababa;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
 
     </style>
 
@@ -1630,7 +1648,7 @@ $qa_cart_link = "/cart";
                                 <div class="form-group">
                                     <h2 class="sec-title"> Select your order Approver </h2>
                                 </div>
-                                <div class="form-group" style="margin-bottom: 15px;margin-top: 10px;">
+                                <div class="form-group" style="margin-top: 10px;">
                                     <div class="uni-form-input select">
                                         <span>Approver</span>
                                         <input type="hidden" name="first_approver_1" id="first_approver_1" value="">
@@ -1654,11 +1672,11 @@ $qa_cart_link = "/cart";
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-group" style="margin-left: 0;">
+                                <div class="form-group" style="margin-bottom: 15px;margin-left: 0;">
                                     <p style="float: right; color: red;" id="department_amount_msg"></p>
                                 </div>
 
-                                <div class="form-group" style="margin-left: 15px;">
+                                <div class="form-group" style="margin-bottom: 15px;margin-left: 0;">
                                     <label for="additional_note" class="uni-form-input">
                                         <textarea name="additional_note" id="additional_note" class="form-control" placeholder="Comment/Note"></textarea>
                                     </label>

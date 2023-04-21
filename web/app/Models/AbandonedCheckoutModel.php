@@ -34,6 +34,11 @@ class AbandonedCheckoutModel extends Model{
             ->where('ac_id',$ac_id)
             ->delete();
     }
+    public function delete_abandoned_checkout_by_token($ac_token){
+        return DB::table($this->table)
+            ->where('ac_token',$ac_token)
+            ->delete();
+    }
 
 
 }
