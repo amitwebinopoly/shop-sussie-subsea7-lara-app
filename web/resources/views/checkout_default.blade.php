@@ -1287,6 +1287,37 @@ $qa_cart_link = "/cart";
                                                 <p class="notice__text" id="vendor_shipping_error_msg"></p>
                                             </div>
                                         </div>
+
+                                        <?php if(isset($isa_data) && !empty($isa_data)){ ?>
+                                        <div class="form-group">
+                                            <div class="uni-form-input select">
+                                                <span>International Shipping Address</span>
+                                                <select class="form-control" id="isa_address">
+                                                    <option value="">Enter manual address</option>
+                                                    <?php foreach ($isa_data as $isa) { ?>
+                                                    <option value="<?=$isa->isa_id?>"
+                                                            data-isa_id="<?=$isa->isa_id?>"
+                                                            data-isa_first_name="<?=$isa->isa_first_name?>"
+                                                            data-isa_last_name="<?=$isa->isa_last_name?>"
+                                                            data-isa_address_1="<?=$isa->isa_address_1?>"
+                                                            data-isa_address_2="<?=$isa->isa_address_2?>"
+                                                            data-isa_city="<?=$isa->isa_city?>"
+                                                            data-isa_zipcode="<?=$isa->isa_zipcode?>"
+                                                            data-isa_country_code="<?=$isa->isa_country_code?>"
+                                                            data-isa_country="<?=$isa->isa_country?>"
+                                                            data-isa_state_code="<?=$isa->isa_state_code?>"
+                                                            data-isa_state="<?=$isa->isa_state?>"
+                                                            >
+                                                        <?= $isa->isa_first_name.' '.$isa->isa_last_name ?><br>
+                                                        <?= $isa->isa_address_1.' '.$isa->isa_address_2.' '.$isa->isa_city ?><br>
+                                                        <?= $isa->isa_state.' '.$isa->isa_country.' '.$isa->isa_zipcode ?>
+                                                    </option>
+                                                    <?php } ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <?php }?>
+
                                         <div class="form-group" id="shipping_country_div">
                                             <div class="uni-form-input select">
                                                 <span>Country/region</span>

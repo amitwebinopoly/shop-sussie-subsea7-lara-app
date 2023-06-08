@@ -32,6 +32,9 @@ Route::get('/get_int_ship_address_list',[ AppController::class,'get_int_ship_add
 Route::get('/get_int_ship_address/{id}',[ AppController::class,'get_int_ship_address'])->middleware('shopify.auth');
 Route::post('/post_int_ship_address',[ AppController::class,'post_int_ship_address'])->middleware('shopify.auth');
 
+Route::get('/approver-status/{shop}/{status}/{oid}',[ FrontEndController::class,'approver_status'])->name('approve_status_link');
+Route::get('/approver-confirm/{shop}/{status}/{oid}',[ FrontEndController::class,'approver_confirm'])->name('approve_confirm_link');
+
 //frontend
 Route::middleware([EnsureFrontendShopAuth::class])->group(function () {
     Route::post('/post_abandoned_cart',[ FrontEndController::class,'post_abandoned_cart']);

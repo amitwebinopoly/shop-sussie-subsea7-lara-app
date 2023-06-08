@@ -6,6 +6,8 @@ use App\Models\CheckoutSettingModel;
 use App\Http\Controllers\InexController;
 use App\Http\Controllers\GraphqlController;
 
+use App\Models\OrderItemModel;
+use App\Models\OrderModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
@@ -15,6 +17,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 
+use PHPUnit\Framework\Exception;
 use Shopify\Clients\Graphql;
 use Shopify\Clients\Rest;
 
@@ -51,6 +54,7 @@ class FrontEndController extends Controller {
 				// checkout setting from database
 				$cs_data = $CheckoutSettingModel->select_by_shop($shop);
 				$is_data = $AppModel->select_insperity_setting_by_shop($shop);
+				//$isa_data = $AppModel->select_int_ship_address_by_shop($shop);
 
 				$c = 0;
 				$need_to_display_promocode_section = 'Yes';
@@ -201,6 +205,7 @@ class FrontEndController extends Controller {
 				$this->param['ac_data'] = $ac_data[0];
 				$this->param['cs_data'] = !empty($cs_data)?$cs_data[0]:[];
 				$this->param['is_data'] = !empty($is_data)?$is_data[0]:[];
+				//$this->param['isa_data'] = !empty($isa_data)?$isa_data:[];
 
 				$this->param['page_meta_title'] = Config::get('constant.PAGE_META_TITLE');
 				$this->param['proxy_path'] = Config::get('constant.PROXY_PATH');
@@ -893,7 +898,7 @@ class FrontEndController extends Controller {
 						'total_tax' => $cart_tax_price,
 						//'tags' => 'paid',
 						'currency' => $currency,
-						'financial_status' => 'paid',
+						'financial_status' => $_POST['cart_total_price']>0?'pending':'paid',
 						'inventory_behaviour' => 'decrement_ignoring_policy',
 						//'confirmed' => true,
 						//'total_discounts' => isset(self::$payres['order']['total_discounts'])?self::$payres['order']['total_discounts']:0,
@@ -1215,10 +1220,18 @@ class FrontEndController extends Controller {
 					}
 
 					//create order
-					$shopifyOrderResult = $rest_client->post('orders',['order'=>$insertOrder]);
-					$lastorder = $shopifyOrderResult->getDecodedBody();
+					/*$shopifyOrderResult = $rest_client->post('orders',['order'=>$insertOrder]);
+					$lastorder = $shopifyOrderResult->getDecodedBody();*/
+					//inex
+					$lastorder = json_decode('{"order":{"id":5189710184705,"admin_graphql_api_id":"gid:\/\/shopify\/Order\/5189710184705","app_id":33216331777,"browser_ip":null,"buyer_accepts_marketing":false,"cancel_reason":null,"cancelled_at":null,"cart_token":null,"checkout_id":null,"checkout_token":null,"closed_at":null,"confirmed":true,"contact_email":"amit.webinopoly@gmail.com","created_at":"2023-04-21T23:50:03+05:30","currency":"USD","current_subtotal_price":"100.00","current_subtotal_price_set":{"shop_money":{"amount":"100.00","currency_code":"USD"},"presentment_money":{"amount":"100.00","currency_code":"USD"}},"current_total_discounts":"0.00","current_total_discounts_set":{"shop_money":{"amount":"0.00","currency_code":"USD"},"presentment_money":{"amount":"0.00","currency_code":"USD"}},"current_total_duties_set":null,"current_total_price":"115.73","current_total_price_set":{"shop_money":{"amount":"115.73","currency_code":"USD"},"presentment_money":{"amount":"115.73","currency_code":"USD"}},"current_total_tax":"8.83","current_total_tax_set":{"shop_money":{"amount":"8.83","currency_code":"USD"},"presentment_money":{"amount":"8.83","currency_code":"USD"}},"customer_locale":null,"device_id":null,"discount_codes":[],"email":"amit.webinopoly@gmail.com","estimated_taxes":false,"financial_status":"paid","fulfillment_status":null,"gateway":"manual","landing_site":null,"landing_site_ref":null,"location_id":null,"name":"#1005","note":"","note_attributes":[{"name":"Cost Center Number","value":"98765"},{"name":"First Approver 1","value":"amit.webinopoly@gmail.com"},{"name":"First Approver Status 1","value":"---"},{"name":"Approver name","value":"Broussard, Craig"},{"name":"Additional Note","value":"test test"}],"number":5,"order_number":1005,"order_status_url":"https:\/\/social-share-node-testing-store.myshopify.com\/65181843713\/orders\/5acf6afe2cd0ea544aab7b03a365f49e\/authenticate?key=355b1b2c5f9ab5903ec048b911b54c2a","original_total_duties_set":null,"payment_gateway_names":["manual"],"phone":null,"presentment_currency":"USD","processed_at":"2023-04-21T23:50:03+05:30","processing_method":"","reference":null,"referring_site":"","source_identifier":null,"source_name":"33216331777","source_url":null,"subtotal_price":"100.00","subtotal_price_set":{"shop_money":{"amount":"100.00","currency_code":"USD"},"presentment_money":{"amount":"100.00","currency_code":"USD"}},"tags":"","tax_lines":[{"price":"6.69","rate":0.0625,"title":"Texas State Tax","price_set":{"shop_money":{"amount":"6.69","currency_code":"USD"},"presentment_money":{"amount":"6.69","currency_code":"USD"}},"channel_liable":null},{"price":"2.14","rate":0.02,"title":"Houston City Tax","price_set":{"shop_money":{"amount":"2.14","currency_code":"USD"},"presentment_money":{"amount":"2.14","currency_code":"USD"}},"channel_liable":null}],"taxes_included":false,"test":false,"token":"5acf6afe2cd0ea544aab7b03a365f49e","total_discounts":"0.00","total_discounts_set":{"shop_money":{"amount":"0.00","currency_code":"USD"},"presentment_money":{"amount":"0.00","currency_code":"USD"}},"total_line_items_price":"100.00","total_line_items_price_set":{"shop_money":{"amount":"100.00","currency_code":"USD"},"presentment_money":{"amount":"100.00","currency_code":"USD"}},"total_outstanding":"0.00","total_price":"115.73","total_price_set":{"shop_money":{"amount":"115.73","currency_code":"USD"},"presentment_money":{"amount":"115.73","currency_code":"USD"}},"total_price_usd":"115.73","total_shipping_price_set":{"shop_money":{"amount":"6.90","currency_code":"USD"},"presentment_money":{"amount":"6.90","currency_code":"USD"}},"total_tax":"8.83","total_tax_set":{"shop_money":{"amount":"8.83","currency_code":"USD"},"presentment_money":{"amount":"8.83","currency_code":"USD"}},"total_tip_received":"0.00","total_weight":0,"updated_at":"2023-04-21T23:50:04+05:30","user_id":null,"billing_address":{"first_name":"Amit","address1":"123","phone":"(987) 654-3210","city":"Houston","zip":"77584","province":"Texas","country":"United States","last_name":"Gmail","address2":"Broadway St.","company":"https:\/\/google.com","latitude":29.5321026,"longitude":-95.3207069,"name":"Amit Gmail","country_code":"US","province_code":"TX"},"customer":{"id":6782942183681,"email":"amit.webinopoly@gmail.com","accepts_marketing":false,"created_at":"2023-04-03T21:34:10+05:30","updated_at":"2023-04-21T23:50:03+05:30","first_name":"Amit","last_name":"Gmail","orders_count":5,"state":"enabled","total_spent":"548.77","last_order_id":5189710184705,"note":null,"verified_email":false,"multipass_identifier":null,"tax_exempt":false,"phone":null,"email_marketing_consent":{"state":"unsubscribed","opt_in_level":"single_opt_in","consent_updated_at":"2023-04-21T23:50:03+05:30"},"sms_marketing_consent":null,"tags":"","currency":"USD","last_order_name":"#1005","accepts_marketing_updated_at":"2023-04-21T23:50:03+05:30","marketing_opt_in_level":null,"tax_exemptions":[],"admin_graphql_api_id":"gid:\/\/shopify\/Customer\/6782942183681","default_address":{"id":8346392527105,"customer_id":6782942183681,"first_name":"Amit","last_name":"Gmail","company":"https:\/\/google.com","address1":"123","address2":"Broadway St.","city":"Houston","province":"Texas","country":"United States","zip":"77584","phone":"(987) 654-3210","name":"Amit Gmail","province_code":"TX","country_code":"US","country_name":"United States","default":true}},"discount_applications":[],"fulfillments":[],"line_items":[{"id":13100226019585,"admin_graphql_api_id":"gid:\/\/shopify\/LineItem\/13100226019585","fulfillable_quantity":1,"fulfillment_service":"manual","fulfillment_status":null,"gift_card":false,"grams":0,"name":"Blue Silk Tuxedo","price":"70.00","price_set":{"shop_money":{"amount":"70.00","currency_code":"USD"},"presentment_money":{"amount":"70.00","currency_code":"USD"}},"product_exists":true,"product_id":7996605694209,"properties":[],"quantity":1,"requires_shipping":true,"sku":null,"taxable":true,"title":"Blue Silk Tuxedo","total_discount":"0.00","total_discount_set":{"shop_money":{"amount":"0.00","currency_code":"USD"},"presentment_money":{"amount":"0.00","currency_code":"USD"}},"variant_id":43841537081601,"variant_inventory_management":null,"variant_title":null,"vendor":"partners-demo","tax_lines":[{"channel_liable":null,"price":"4.69","price_set":{"shop_money":{"amount":"4.69","currency_code":"USD"},"presentment_money":{"amount":"4.69","currency_code":"USD"}},"rate":0.0625,"title":"Texas State Tax"},{"channel_liable":null,"price":"1.50","price_set":{"shop_money":{"amount":"1.50","currency_code":"USD"},"presentment_money":{"amount":"1.50","currency_code":"USD"}},"rate":0.02,"title":"Houston City Tax"}],"duties":[],"discount_allocations":[]},{"id":13100226052353,"admin_graphql_api_id":"gid:\/\/shopify\/LineItem\/13100226052353","fulfillable_quantity":1,"fulfillment_service":"manual","fulfillment_status":null,"gift_card":false,"grams":0,"name":"Black Leather Bag","price":"30.00","price_set":{"shop_money":{"amount":"30.00","currency_code":"USD"},"presentment_money":{"amount":"30.00","currency_code":"USD"}},"product_exists":true,"product_id":7996605300993,"properties":[],"quantity":1,"requires_shipping":true,"sku":null,"taxable":true,"title":"Black Leather Bag","total_discount":"0.00","total_discount_set":{"shop_money":{"amount":"0.00","currency_code":"USD"},"presentment_money":{"amount":"0.00","currency_code":"USD"}},"variant_id":43841536688385,"variant_inventory_management":null,"variant_title":null,"vendor":"partners-demo","tax_lines":[{"channel_liable":null,"price":"2.00","price_set":{"shop_money":{"amount":"2.00","currency_code":"USD"},"presentment_money":{"amount":"2.00","currency_code":"USD"}},"rate":0.0625,"title":"Texas State Tax"},{"channel_liable":null,"price":"0.64","price_set":{"shop_money":{"amount":"0.64","currency_code":"USD"},"presentment_money":{"amount":"0.64","currency_code":"USD"}},"rate":0.02,"title":"Houston City Tax"}],"duties":[],"discount_allocations":[]}],"payment_terms":null,"refunds":[],"shipping_address":{"first_name":"Amit","address1":"123","phone":"(987) 654-3210","city":"Houston","zip":"77584","province":"Texas","country":"United States","last_name":"Gmail","address2":"Broadway St.","company":"https:\/\/google.com","latitude":null,"longitude":null,"name":"Amit Gmail","country_code":"US","province_code":"TX"},"shipping_lines":[{"id":4315734704385,"carrier_identifier":null,"code":"Standard","delivery_category":null,"discounted_price":"6.90","discounted_price_set":{"shop_money":{"amount":"6.90","currency_code":"USD"},"presentment_money":{"amount":"6.90","currency_code":"USD"}},"phone":null,"price":"6.90","price_set":{"shop_money":{"amount":"6.90","currency_code":"USD"},"presentment_money":{"amount":"6.90","currency_code":"USD"}},"requested_fulfillment_service_id":null,"source":null,"title":"Standard","tax_lines":[],"discount_allocations":[]}]}}',1);
 
 					if (isset($lastorder['order']['id'])) {
+						try{
+							$this->manage_approvers($lastorder['order'],$shop);
+						}catch (Exception $e){
+
+						}
+
 						//manage payment log
 						//$_POST['pl_id'] = Registry::get("SquarePayment")->manage_payment_log(self::$payres['transactionid'],$lastorder['id'],'','1','1');
 
@@ -1234,6 +1247,8 @@ class FrontEndController extends Controller {
 						){
 							Registry::get("Order")->subscription_data_entry_in_db($lastorder,self::$payres);
 						}*/
+
+
 
 						$res['success'] = 'true';
 						$res['message'] = '';
@@ -1265,6 +1280,595 @@ class FrontEndController extends Controller {
 
 		echo json_encode($res,1);
 
+	}
+	public function manage_approvers($order,$shop){
+		$OrderModel = new OrderModel();
+		$OrderItemModel = new OrderItemModel();
+
+		$order_id = $order['id'];
+		$AwsController = new AwsController(env('AWS_BUCKET_ACCESS_KEY'), env('AWS_BUCKET_SECRET_KEY'), env('AWS_BUCKET_REGION'));
+
+		$subject = 'Shop Subsea 7 Company Store- Approval is REQUIRED';
+
+		$param = [
+			'order' => $order
+		];
+		$message = view('mail_template.email_approver_required',$param)->render();
+
+		$first_approver_1 = '';
+		$second_approver_1 = '';
+		$department_1 = '';
+		$department_amount_1 = '';
+		$first_approver_mail_body_1 = '';
+		$second_approver_mail_body_1 = '';
+		$approver_name = '';
+
+		$first_approver_2 = '';
+		$second_approver_2 = '';
+		$department_2 = '';
+		$department_amount_2 = '';
+		$first_approver_mail_body_2 = '';
+		$second_approver_mail_body_2 = '';
+
+		$first_approver_3 = '';
+		$second_approver_3 = '';
+		$department_3 = '';
+		$department_amount_3 = '';
+		$first_approver_mail_body_3 = '';
+		$second_approver_mail_body_3 = '';
+
+		$po_number = '';
+		$send_to_customer = 'No';
+
+		$approve_link = route('approve_status_link',[$shop,'approved',$order_id]);
+		$not_approve_link = route('approve_confirm_link',[$shop,'notapproved',$order_id]);
+
+		foreach ($order['note_attributes'] as $key => $value) {
+			if($value['name'] == 'Cost Center Number'){
+				$po_number = $value['value'];
+			}else if($value['name'] == 'First Approver 1'){
+				$first_approver_1 = $value['value'];
+				if($value['value']!='' && $value['value']!='---'){
+					$al = $approve_link.'?fa1='.$value['value'];
+					$nal = $not_approve_link.'?fa1='.$value['value'];
+
+					$body = str_replace('[APPROVE_LINK]',$al,$message);
+					$body = str_replace('[NOT_APPROVE_LINK]',$nal,$body);
+					$first_approver_mail_body_1 = $body;
+				}
+			}else if($value['name'] == 'Second Approver 1'){
+				$second_approver_1 = $value['value'];
+				if($value['value']!='' && $value['value']!='---'){
+					$al = $approve_link.'?sa1='.$value['value'];
+					$nal = $not_approve_link.'?sa1='.$value['value'];
+
+					$body = str_replace('[APPROVE_LINK]',$al,$message);
+					$body = str_replace('[NOT_APPROVE_LINK]',$nal,$body);
+					$second_approver_mail_body_1 = $body;
+				}
+			}else if($value['name'] == 'Department 1'){
+				$department_1 = $value['value'];
+			}else if($value['name'] == 'Department Amount 1'){
+				$department_amount_1 = $value['value'];
+			}else if($value['name'] == 'Approver name'){
+				$approver_name = $value['value'];
+			}else if($value['name'] == 'First Approver 2'){
+				$first_approver_2 = $value['value'];
+				if($value['value']!='' && $value['value']!='---'){
+					$al = $approve_link.'?fa2='.$value['value'];
+					$nal = $not_approve_link.'?fa2='.$value['value'];
+
+					$body = str_replace('[APPROVE_LINK]',$al,$message);
+					$body = str_replace('[NOT_APPROVE_LINK]',$nal,$body);
+					$first_approver_mail_body_2 = $body;
+				}
+			}else if($value['name'] == 'Second Approver 2'){
+				$second_approver_2 = $value['value'];
+				if($value['value']!='' && $value['value']!='---'){
+					$al = $approve_link.'?sa2='.$value['value'];
+					$nal = $not_approve_link.'?sa2='.$value['value'];
+
+					$body = str_replace('[APPROVE_LINK]',$al,$message);
+					$body = str_replace('[NOT_APPROVE_LINK]',$nal,$body);
+					$second_approver_mail_body_2 = $body;
+				}
+			}else if($value['name'] == 'Department 2'){
+				$department_2 = $value['value'];
+			}else if($value['name'] == 'Department Amount 2'){
+				$department_amount_2 = $value['value'];
+			}else if($value['name'] == 'First Approver 3'){
+				$first_approver_3 = $value['value'];
+				if($value['value']!='' && $value['value']!='---'){
+					$al = $approve_link.'?fa3='.$value['value'];
+					$nal = $not_approve_link.'?fa3='.$value['value'];
+
+					$body = str_replace('[APPROVE_LINK]',$al,$message);
+					$body = str_replace('[NOT_APPROVE_LINK]',$nal,$body);
+					$first_approver_mail_body_3 = $body;
+				}
+			}else if($value['name'] == 'Second Approver 3'){
+				$second_approver_3 = $value['value'];
+				if($value['value']!='' && $value['value']!='---'){
+					$al = $approve_link.'?sa3='.$value['value'];
+					$nal = $not_approve_link.'?sa3='.$value['value'];
+
+					$body = str_replace('[APPROVE_LINK]',$al,$message);
+					$body = str_replace('[NOT_APPROVE_LINK]',$nal,$body);
+					$second_approver_mail_body_3 = $body;
+				}
+			}else if($value['name'] == 'Department 3'){
+				$department_3 = $value['value'];
+			}else if($value['name'] == 'Department Amount 3'){
+				$department_amount_3 = $value['value'];
+			}
+		}
+
+		if($first_approver_mail_body_1!='' && $first_approver_1!=''){
+			$dp = 'Approver Name : '.$approver_name.'<br>Cost Center Number : '.$po_number.'<br>';
+			$first_approver_mail_body_1 = str_replace('[DEPARTMENT_DATA]',$dp,$first_approver_mail_body_1);
+			//inex
+			//$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), 'amit.webinopoly@gmail.com', $subject, $first_approver_mail_body_1);
+			$send_to_customer = 'Yes';
+		}
+		/*if($second_approver_mail_body_1!='' && $second_approver_1!=''){
+			$dp = 'Approver Name : '.$department_1.'<br>Cost Center Number : '.$po_number.'<br>';
+			$second_approver_mail_body_1 = str_replace('[DEPARTMENT_DATA]',$dp,$second_approver_mail_body_1);
+			$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $second_approver_1, $subject, $second_approver_mail_body_1);
+			$send_to_customer = 'Yes';
+		}
+		if($first_approver_mail_body_2!='' && $first_approver_2!=''){
+			$dp = 'Approver Name : '.$department_2.'<br>Cost Center Number : '.$po_number.'<br>';
+			$first_approver_mail_body_2 = str_replace('[DEPARTMENT_DATA]',$dp,$first_approver_mail_body_2);
+			$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $first_approver_2, $subject, $first_approver_mail_body_2);
+			$send_to_customer = 'Yes';
+		}
+		if($second_approver_mail_body_2!='' && $second_approver_2!=''){
+			$dp = 'Approver Name : '.$department_2.'<br>Cost Center Number : '.$po_number.'<br>';
+			$second_approver_mail_body_2 = str_replace('[DEPARTMENT_DATA]',$dp,$second_approver_mail_body_2);
+			$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $second_approver_2, $subject, $second_approver_mail_body_2);
+			$send_to_customer = 'Yes';
+		}
+		if($first_approver_mail_body_3!='' && $first_approver_3!=''){
+			$dp = 'Approver Name : '.$department_3.'<br>Cost Center Number : '.$po_number.'<br>';
+			$first_approver_mail_body_3 = str_replace('[DEPARTMENT_DATA]',$dp,$first_approver_mail_body_3);
+			$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $first_approver_3, $subject, $first_approver_mail_body_3);
+			$send_to_customer = 'Yes';
+		}
+		if($second_approver_mail_body_3!='' && $second_approver_3!=''){
+			$dp = 'Approver Name : '.$department_3.'<br>Cost Center Number : '.$po_number.'<br>';
+			$second_approver_mail_body_3 = str_replace('[DEPARTMENT_DATA]',$dp,$second_approver_mail_body_3);
+			$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $second_approver_3, $subject, $second_approver_mail_body_3);
+			$send_to_customer = 'Yes';
+		}*/
+
+		//send email to customer
+		if($send_to_customer == 'Yes'){
+			$param = [
+				'order' => $order
+			];
+			$cust_email_body = view('mail_template.email_to_customer_while_order_placed',$param)->render();
+
+			$cust_email_subject = 'Shop Subsea 7 Company Store- #'.$order['order_number'].' Approval is PENDING';
+			//inex
+			//$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $order['customer']['email'], $cust_email_subject, $cust_email_body,env('SUPER_ADMIN_EMAIL'));
+		}
+
+		$shipping_address = @$order['shipping_address']['address1'].', '.@$order['shipping_address']['address2'].', '.@$order['shipping_address']['city'].' '.@$order['shipping_address']['province_code'].' '.@$order['shipping_address']['zip'].', '.@$order['shipping_address']['country'].', '.@$order['shipping_address']['phone'];
+		$order_insert_data = [
+			"so_order_id" => $order['id'],
+			"so_order_number" => $order['order_number'],
+			"so_order_sub_total" => $order['subtotal_price'],
+			"so_order_shipping_charges" => isset($order['total_shipping_price_set']['shop_money']['amount']) ? $order['total_shipping_price_set']['shop_money']['amount']:'0',
+			"so_order_tax" => $order['total_tax'],
+			"so_total_price" => $order['total_price'],
+			"so_cust_id" => @$order['customer']['id'],
+			"so_cust_email" => @$order['customer']['email'],
+			"so_cust_name" => @$order['customer']['first_name'].' '.@$order['customer']['last_name'],
+			"so_cust_phone" => @$order['customer']['phone'],
+
+			"so_first_approver_1" => $first_approver_1,
+			"so_first_approver_status_1" => '',
+			"so_second_approver_1" => $second_approver_1,
+			"so_second_approver_status_1" => '',
+			"so_department_1" => $department_1,
+			"so_department_amount_1" => $department_amount_1,
+
+			"so_first_approver_2" => $first_approver_2,
+			"so_first_approver_status_2" => '',
+			"so_second_approver_2" => $second_approver_2,
+			"so_second_approver_status_2" => '',
+			"so_department_2" => $department_2,
+			"so_department_amount_2" => $department_amount_2,
+
+			"so_first_approver_3" => $first_approver_3,
+			"so_first_approver_status_3" => '',
+			"so_second_approver_3" => $second_approver_3,
+			"so_second_approver_status_3" => '',
+			"so_department_3" => $department_3,
+			"so_department_amount_3" => $department_amount_3,
+
+			"so_user_first_name" => @$order['customer']['first_name'],
+			"so_user_last_name" => @$order['customer']['last_name'],
+			"so_ship_to_first_name" => @$order['shipping_address']['first_name'],
+			"so_ship_to_last_name" => @$order['shipping_address']['last_name'],
+			"so_ship_to_address" => rtrim($shipping_address,', '),
+
+			"so_json" => json_encode($order,1),
+			"so_add_date" => time(),
+			"so_modify_date" => ""
+		];
+
+		$so_id = $OrderModel->insert_shop_orders($order_insert_data);
+		if(isset($order['line_items']) && !empty($order['line_items'])){
+			foreach($order['line_items'] as $single_item){
+				$item_insert_data = [
+					"soi_so_id" => $so_id,
+					"soi_product_id" => $single_item['product_id'],
+					"soi_variant_id" => $single_item['variant_id'],
+					"soi_title" => $single_item['title'].' '.$single_item['variant_title'],
+					"soi_quantity" => $single_item['quantity'],
+					"soi_price" => $single_item['price'],
+					"soi_sku" => $single_item['sku'],
+					"soi_vendor" => $single_item['vendor'],
+					"soi_add_date" => time()
+				];
+				$OrderItemModel->insert_shop_order_items($item_insert_data);
+			}
+		}
+	}
+	public function approver_status($shop,$status,$oid){
+		$OrderModel = new OrderModel();
+
+		$shopCred = \App\Models\Session::where('shop', $shop)->get()->toArray();
+		if(isset($shopCred[0]['id']) && !empty($shopCred[0]['id'])){
+			$token = $shopCred[0]['access_token'];
+			$rest_client = new Rest($shop, $token);
+
+			$headers = array(
+				'X-Shopify-Access-Token' => $token
+				//'X-Shopify-Storefront-Access-Token' => $storefront_access_token
+			);
+			$GraphqlController = new GraphqlController($shop, $headers, false); //pass true for store front apis
+
+			$AwsController = new AwsController(env('AWS_BUCKET_ACCESS_KEY'), env('AWS_BUCKET_SECRET_KEY'), env('AWS_BUCKET_REGION'));
+
+			$shopifyOrderResult = $rest_client->get('orders/'.$oid);
+			$orderInfo = $shopifyOrderResult->getDecodedBody();
+			if(isset($orderInfo['order']) && !empty($orderInfo['order'])){
+				$order = $orderInfo['order'];
+
+				if($status=='approved'){
+					$subject = 'Shop Subsea 7 Company Store- Order ' . $order['name'] . ' - Approved';
+					$param = [
+						'order' => $order
+					];
+					$message = view('mail_template.email_to_customer_order_approved',$param)->render();
+
+					$firstto = env('SUPER_ADMIN_EMAIL');
+					$secondto = $order['email'];
+
+					echo "<h3> Your order status has been sent. Thank you! </h3>";
+					if (!empty($firstto)) {
+						//inex
+						//$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $firstto, $subject, $message);
+					}
+					if (!empty($secondto)) {
+						//inex
+						//$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $secondto, $subject, $message);
+					}
+
+					// update note_attributes with approver-status
+					$note_attributes = [];
+					if (isset($order['note_attributes'])) {
+						$note_attributes = $order['note_attributes'];
+					}
+					if( isset($_GET['fa1']) && !empty($_GET['fa1'])){
+						$na_arr = [
+							'name' => 'First Approver Status 1',
+							'value' => 'Approved'
+						];
+						array_push($note_attributes,$na_arr);
+
+						//update status in db
+						$status_update_data = [
+							"so_first_approver_status_1" => 'Approved'
+						];
+						$OrderModel->update_shop_orders_by_order_id($order['id'],$status_update_data);
+					}
+					if(isset($_GET['sa1']) && !empty($_GET['sa1'])){
+						$na_arr = [
+							'name' => 'Second Approver Status 1',
+							'value' => 'Approved'
+						];
+						array_push($note_attributes,$na_arr);
+
+						//update status in db
+						$status_update_data = [
+							"so_second_approver_status_1" => 'Approved'
+						];
+						$OrderModel->update_shop_orders_by_order_id($order['id'],$status_update_data);
+					}
+					if( isset($_GET['fa2']) && !empty($_GET['fa2'])){
+						$na_arr = [
+							'name' => 'First Approver Status 2',
+							'value' => 'Approved'
+						];
+						array_push($note_attributes,$na_arr);
+
+						//update status in db
+						$status_update_data = [
+							"so_first_approver_status_2" => 'Approved'
+						];
+						$OrderModel->update_shop_orders_by_order_id($order['id'],$status_update_data);
+					}
+					if(isset($_GET['sa2']) && !empty($_GET['sa2'])){
+						$na_arr = [
+							'name' => 'Second Approver Status 2',
+							'value' => 'Approved'
+						];
+						array_push($note_attributes,$na_arr);
+
+						//update status in db
+						$status_update_data = [
+							"so_second_approver_status_2" => 'Approved'
+						];
+						$OrderModel->update_shop_orders_by_order_id($order['id'],$status_update_data);
+					}
+					if( isset($_GET['fa3']) && !empty($_GET['fa3'])){
+						$na_arr = [
+							'name' => 'First Approver Status 3',
+							'value' => 'Approved'
+						];
+						array_push($note_attributes,$na_arr);
+
+						//update status in db
+						$status_update_data = [
+							"so_first_approver_status_3" => 'Approved'
+						];
+						$OrderModel->update_shop_orders_by_order_id($order['id'],$status_update_data);
+					}
+					if(isset($_GET['sa3']) && !empty($_GET['sa3'])){
+						$na_arr = [
+							'name' => 'Second Approver Status 3',
+							'value' => 'Approved'
+						];
+						array_push($note_attributes,$na_arr);
+
+						//update status in db
+						$status_update_data = [
+							"so_second_approver_status_3" => 'Approved'
+						];
+						$OrderModel->update_shop_orders_by_order_id($order['id'],$status_update_data);
+					}
+
+					//update note attributes in shopify order
+					$updateOrder = array(
+						'note_attributes' => $note_attributes
+					);
+					$rest_client->put('orders/'.$order['id'],['order'=>$updateOrder]);
+
+					//if all approver status is "Approve", then order mark as paid, fullfil all item
+					$order_data = $OrderModel->select_by_order_id($order['id']);
+
+					$approver_count = 0;
+					$status_approve_count = 0;
+					if(!empty($order_data)){
+						$order_data = $order_data[0];
+
+						if( ($order_data->so_first_approver_1!='' && $order_data->so_first_approver_1!='---') ||
+							($order_data->so_second_approver_1!='' && $order_data->so_second_approver_1!='---')
+						){
+							$approver_count++;
+						}
+						if($order_data->so_first_approver_status_1=='Approved' || $order_data->so_second_approver_status_1=='Approved'){
+							$status_approve_count++;
+						}
+						//if($order_data->so_second_approver_1!='' && $order_data->so_second_approver_1!='---'){ $approver_count++; }
+						//if($order_data->so_second_approver_status_1=='Approved'){ $status_approve_count++; }
+
+						if( ($order_data->so_first_approver_2!='' && $order_data->so_first_approver_2!='---') ||
+							($order_data->so_second_approver_2!='' && $order_data->so_second_approver_2!='---')
+						){
+							$approver_count++;
+						}
+						if($order_data->so_first_approver_status_2=='Approved' || $order_data->so_second_approver_status_2=='Approved'){
+							$status_approve_count++;
+						}
+						//if($order_data->so_second_approver_2!='' && $order_data->so_second_approver_2!='---'){ $approver_count++; }
+						//if($order_data->so_second_approver_status_2=='Approved'){ $status_approve_count++; }
+
+						if( ($order_data->so_first_approver_3!='' && $order_data->so_first_approver_3!='---') ||
+							($order_data->so_second_approver_3!='' && $order_data->so_second_approver_3!='---')
+						){
+							$approver_count++;
+						}
+						if($order_data->so_first_approver_status_3=='Approved' || $order_data->so_second_approver_status_3=='Approved'){
+							$status_approve_count++;
+						}
+						//if($order_data->so_second_approver_3!='' && $order_data->so_second_approver_3!='---'){ $approver_count++; }
+						//if($order_data->so_second_approver_status_3=='Approved'){ $status_approve_count++; }
+					}
+
+					if($approver_count==$status_approve_count && $approver_count>0 && $status_approve_count>0){
+						//mark as paid
+						$mutation = 'mutation orderMarkAsPaid($input: OrderMarkAsPaidInput!) {
+						  orderMarkAsPaid(input: $input) {
+							order { id }
+							userErrors { field message }
+						  }
+						}
+						';
+						$input_query = '{
+						  "input": {
+							"id": "gid://shopify/Order/'.$order['id'].'"
+						  }
+						}';
+
+						$GraphqlController->runByMutation($mutation,$input_query);
+
+					}
+				}
+				else if($status=='notapproved'){
+					$subject = 'Shop Subsea 7 Company Store- Order ' . $order['name'] . ' - Not approved';
+
+					$param = [
+						'order' => $order
+					];
+					$message = view('mail_template.email_to_customer_order_not_approved',$param)->render();
+
+					$firstto = env('SUPER_ADMIN_EMAIL');
+					$secondto = $order['email'];
+
+					if (!empty($firstto)) {
+						echo "<h3> Mail has been sent. </h3>";
+						$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $firstto, $subject, $message);
+					}
+					if (!empty($secondto)) {
+						$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $secondto, $subject, $message);
+					}
+
+					// update note_attributes with approver-status
+					$note_attributes = [];
+					if (isset($result['note_attributes'])) {
+						$note_attributes = $result['note_attributes'];
+					}
+					if( isset($_GET['fa1']) && !empty($_GET['fa1'])){
+						$na_arr = [
+							'name' => 'First Approver Status 1',
+							'value' => 'Not Approved'
+						];
+						array_push($note_attributes,$na_arr);
+
+						//update status in db
+						$status_update_data = [
+							"so_first_approver_status_1" => 'Not Approved'
+						];
+						$OrderModel->update_shop_orders_by_order_id($order['id'],$status_update_data);
+					}
+					if(isset($_GET['sa1']) && !empty($_GET['sa1'])){
+						$na_arr = [
+							'name' => 'Second Approver Status 1',
+							'value' => 'Not Approved'
+						];
+						array_push($note_attributes,$na_arr);
+
+						//update status in db
+						$status_update_data = [
+							"so_second_approver_status_1" => 'Not Approved'
+						];
+						$OrderModel->update_shop_orders_by_order_id($order['id'],$status_update_data);
+					}
+					if( isset($_GET['fa2']) && !empty($_GET['fa2'])){
+						$na_arr = [
+							'name' => 'First Approver Status 2',
+							'value' => 'Not Approved'
+						];
+						array_push($note_attributes,$na_arr);
+
+						//update status in db
+						$status_update_data = [
+							"so_first_approver_status_2" => 'Not Approved'
+						];
+						$OrderModel->update_shop_orders_by_order_id($order['id'],$status_update_data);
+					}
+					if(isset($_GET['sa2']) && !empty($_GET['sa2'])){
+						$na_arr = [
+							'name' => 'Second Approver Status 2',
+							'value' => 'Not Approved'
+						];
+						array_push($note_attributes,$na_arr);
+
+						//update status in db
+						$status_update_data = [
+							"so_second_approver_status_2" => 'Not Approved'
+						];
+						$OrderModel->update_shop_orders_by_order_id($order['id'],$status_update_data);
+					}
+					if( isset($_GET['fa3']) && !empty($_GET['fa3'])){
+						$na_arr = [
+							'name' => 'First Approver Status 3',
+							'value' => 'Not Approved'
+						];
+						array_push($note_attributes,$na_arr);
+
+						//update status in db
+						$status_update_data = [
+							"so_first_approver_status_3" => 'Not Approved'
+						];
+						$OrderModel->update_shop_orders_by_order_id($order['id'],$status_update_data);
+					}
+					if(isset($_GET['sa3']) && !empty($_GET['sa3'])){
+						$na_arr = [
+							'name' => 'Second Approver Status 3',
+							'value' => 'Not Approved'
+						];
+						array_push($note_attributes,$na_arr);
+
+						//update status in db
+						$status_update_data = [
+							"so_second_approver_status_3" => 'Not Approved'
+						];
+						$OrderModel->update_shop_orders_by_order_id($order['id'],$status_update_data);
+					}
+
+					if(isset($reason) && !empty($reason)){
+						$na_arr = [
+							'name' => 'Reason for not approve',
+							'value' => $reason
+						];
+						array_push($note_attributes,$na_arr);
+					}
+
+					$updateOrder = array(
+						'note_attributes' => $note_attributes
+					);
+					$rest_client->put('orders/'.$order['id'],['order'=>$updateOrder]);
+				}
+				else{
+					echo 'Invalid status';
+				}
+
+			}else{
+				echo 'Order info is not available.';
+			}
+		}
+		else{
+			echo 'Invalid request.';
+		}
+	}
+	public function approver_confirm($shop,$status,$oid){
+		$OrderModel = new OrderModel();
+
+		$shopCred = \App\Models\Session::where('shop', $shop)->get()->toArray();
+		if(isset($shopCred[0]['id']) && !empty($shopCred[0]['id']) && $status=='notapproved'){
+			$token = $shopCred[0]['access_token'];
+			$rest_client = new Rest($shop, $token);
+
+			/*$headers = array(
+				'X-Shopify-Access-Token' => $token
+				//'X-Shopify-Storefront-Access-Token' => $storefront_access_token
+			);
+			$GraphqlController = new GraphqlController($shop, $headers, false); //pass true for store front apis
+
+			$AwsController = new AwsController(env('AWS_BUCKET_ACCESS_KEY'), env('AWS_BUCKET_SECRET_KEY'), env('AWS_BUCKET_REGION'));*/
+
+			$shopifyOrderResult = $rest_client->get('orders/'.$oid);
+			$orderInfo = $shopifyOrderResult->getDecodedBody();
+			if(isset($orderInfo['order']) && !empty($orderInfo['order'])){
+				$order = $orderInfo['order'];
+
+				$param = [
+					'shop' => $shop,
+					'order' => $order
+				];
+				return view('order_status_confirm',$param);
+			}else{
+				echo 'Order info is not available.';
+			}
+		}
+		else{
+			echo 'Invalid request.';
+		}
 	}
 	public function xxx(Request $request){
 		$res = [];
