@@ -1220,11 +1220,8 @@ class FrontEndController extends Controller {
 					}
 
 					//create order
-					/*$shopifyOrderResult = $rest_client->post('orders',['order'=>$insertOrder]);
-					$lastorder = $shopifyOrderResult->getDecodedBody();*/
-					//inex
-					$lastorder = json_decode('{"order":{"id":5189710184705,"admin_graphql_api_id":"gid:\/\/shopify\/Order\/5189710184705","app_id":33216331777,"browser_ip":null,"buyer_accepts_marketing":false,"cancel_reason":null,"cancelled_at":null,"cart_token":null,"checkout_id":null,"checkout_token":null,"closed_at":null,"confirmed":true,"contact_email":"amit.webinopoly@gmail.com","created_at":"2023-04-21T23:50:03+05:30","currency":"USD","current_subtotal_price":"100.00","current_subtotal_price_set":{"shop_money":{"amount":"100.00","currency_code":"USD"},"presentment_money":{"amount":"100.00","currency_code":"USD"}},"current_total_discounts":"0.00","current_total_discounts_set":{"shop_money":{"amount":"0.00","currency_code":"USD"},"presentment_money":{"amount":"0.00","currency_code":"USD"}},"current_total_duties_set":null,"current_total_price":"115.73","current_total_price_set":{"shop_money":{"amount":"115.73","currency_code":"USD"},"presentment_money":{"amount":"115.73","currency_code":"USD"}},"current_total_tax":"8.83","current_total_tax_set":{"shop_money":{"amount":"8.83","currency_code":"USD"},"presentment_money":{"amount":"8.83","currency_code":"USD"}},"customer_locale":null,"device_id":null,"discount_codes":[],"email":"amit.webinopoly@gmail.com","estimated_taxes":false,"financial_status":"paid","fulfillment_status":null,"gateway":"manual","landing_site":null,"landing_site_ref":null,"location_id":null,"name":"#1005","note":"","note_attributes":[{"name":"Cost Center Number","value":"98765"},{"name":"First Approver 1","value":"amit.webinopoly@gmail.com"},{"name":"First Approver Status 1","value":"---"},{"name":"Approver name","value":"Broussard, Craig"},{"name":"Additional Note","value":"test test"}],"number":5,"order_number":1005,"order_status_url":"https:\/\/social-share-node-testing-store.myshopify.com\/65181843713\/orders\/5acf6afe2cd0ea544aab7b03a365f49e\/authenticate?key=355b1b2c5f9ab5903ec048b911b54c2a","original_total_duties_set":null,"payment_gateway_names":["manual"],"phone":null,"presentment_currency":"USD","processed_at":"2023-04-21T23:50:03+05:30","processing_method":"","reference":null,"referring_site":"","source_identifier":null,"source_name":"33216331777","source_url":null,"subtotal_price":"100.00","subtotal_price_set":{"shop_money":{"amount":"100.00","currency_code":"USD"},"presentment_money":{"amount":"100.00","currency_code":"USD"}},"tags":"","tax_lines":[{"price":"6.69","rate":0.0625,"title":"Texas State Tax","price_set":{"shop_money":{"amount":"6.69","currency_code":"USD"},"presentment_money":{"amount":"6.69","currency_code":"USD"}},"channel_liable":null},{"price":"2.14","rate":0.02,"title":"Houston City Tax","price_set":{"shop_money":{"amount":"2.14","currency_code":"USD"},"presentment_money":{"amount":"2.14","currency_code":"USD"}},"channel_liable":null}],"taxes_included":false,"test":false,"token":"5acf6afe2cd0ea544aab7b03a365f49e","total_discounts":"0.00","total_discounts_set":{"shop_money":{"amount":"0.00","currency_code":"USD"},"presentment_money":{"amount":"0.00","currency_code":"USD"}},"total_line_items_price":"100.00","total_line_items_price_set":{"shop_money":{"amount":"100.00","currency_code":"USD"},"presentment_money":{"amount":"100.00","currency_code":"USD"}},"total_outstanding":"0.00","total_price":"115.73","total_price_set":{"shop_money":{"amount":"115.73","currency_code":"USD"},"presentment_money":{"amount":"115.73","currency_code":"USD"}},"total_price_usd":"115.73","total_shipping_price_set":{"shop_money":{"amount":"6.90","currency_code":"USD"},"presentment_money":{"amount":"6.90","currency_code":"USD"}},"total_tax":"8.83","total_tax_set":{"shop_money":{"amount":"8.83","currency_code":"USD"},"presentment_money":{"amount":"8.83","currency_code":"USD"}},"total_tip_received":"0.00","total_weight":0,"updated_at":"2023-04-21T23:50:04+05:30","user_id":null,"billing_address":{"first_name":"Amit","address1":"123","phone":"(987) 654-3210","city":"Houston","zip":"77584","province":"Texas","country":"United States","last_name":"Gmail","address2":"Broadway St.","company":"https:\/\/google.com","latitude":29.5321026,"longitude":-95.3207069,"name":"Amit Gmail","country_code":"US","province_code":"TX"},"customer":{"id":6782942183681,"email":"amit.webinopoly@gmail.com","accepts_marketing":false,"created_at":"2023-04-03T21:34:10+05:30","updated_at":"2023-04-21T23:50:03+05:30","first_name":"Amit","last_name":"Gmail","orders_count":5,"state":"enabled","total_spent":"548.77","last_order_id":5189710184705,"note":null,"verified_email":false,"multipass_identifier":null,"tax_exempt":false,"phone":null,"email_marketing_consent":{"state":"unsubscribed","opt_in_level":"single_opt_in","consent_updated_at":"2023-04-21T23:50:03+05:30"},"sms_marketing_consent":null,"tags":"","currency":"USD","last_order_name":"#1005","accepts_marketing_updated_at":"2023-04-21T23:50:03+05:30","marketing_opt_in_level":null,"tax_exemptions":[],"admin_graphql_api_id":"gid:\/\/shopify\/Customer\/6782942183681","default_address":{"id":8346392527105,"customer_id":6782942183681,"first_name":"Amit","last_name":"Gmail","company":"https:\/\/google.com","address1":"123","address2":"Broadway St.","city":"Houston","province":"Texas","country":"United States","zip":"77584","phone":"(987) 654-3210","name":"Amit Gmail","province_code":"TX","country_code":"US","country_name":"United States","default":true}},"discount_applications":[],"fulfillments":[],"line_items":[{"id":13100226019585,"admin_graphql_api_id":"gid:\/\/shopify\/LineItem\/13100226019585","fulfillable_quantity":1,"fulfillment_service":"manual","fulfillment_status":null,"gift_card":false,"grams":0,"name":"Blue Silk Tuxedo","price":"70.00","price_set":{"shop_money":{"amount":"70.00","currency_code":"USD"},"presentment_money":{"amount":"70.00","currency_code":"USD"}},"product_exists":true,"product_id":7996605694209,"properties":[],"quantity":1,"requires_shipping":true,"sku":null,"taxable":true,"title":"Blue Silk Tuxedo","total_discount":"0.00","total_discount_set":{"shop_money":{"amount":"0.00","currency_code":"USD"},"presentment_money":{"amount":"0.00","currency_code":"USD"}},"variant_id":43841537081601,"variant_inventory_management":null,"variant_title":null,"vendor":"partners-demo","tax_lines":[{"channel_liable":null,"price":"4.69","price_set":{"shop_money":{"amount":"4.69","currency_code":"USD"},"presentment_money":{"amount":"4.69","currency_code":"USD"}},"rate":0.0625,"title":"Texas State Tax"},{"channel_liable":null,"price":"1.50","price_set":{"shop_money":{"amount":"1.50","currency_code":"USD"},"presentment_money":{"amount":"1.50","currency_code":"USD"}},"rate":0.02,"title":"Houston City Tax"}],"duties":[],"discount_allocations":[]},{"id":13100226052353,"admin_graphql_api_id":"gid:\/\/shopify\/LineItem\/13100226052353","fulfillable_quantity":1,"fulfillment_service":"manual","fulfillment_status":null,"gift_card":false,"grams":0,"name":"Black Leather Bag","price":"30.00","price_set":{"shop_money":{"amount":"30.00","currency_code":"USD"},"presentment_money":{"amount":"30.00","currency_code":"USD"}},"product_exists":true,"product_id":7996605300993,"properties":[],"quantity":1,"requires_shipping":true,"sku":null,"taxable":true,"title":"Black Leather Bag","total_discount":"0.00","total_discount_set":{"shop_money":{"amount":"0.00","currency_code":"USD"},"presentment_money":{"amount":"0.00","currency_code":"USD"}},"variant_id":43841536688385,"variant_inventory_management":null,"variant_title":null,"vendor":"partners-demo","tax_lines":[{"channel_liable":null,"price":"2.00","price_set":{"shop_money":{"amount":"2.00","currency_code":"USD"},"presentment_money":{"amount":"2.00","currency_code":"USD"}},"rate":0.0625,"title":"Texas State Tax"},{"channel_liable":null,"price":"0.64","price_set":{"shop_money":{"amount":"0.64","currency_code":"USD"},"presentment_money":{"amount":"0.64","currency_code":"USD"}},"rate":0.02,"title":"Houston City Tax"}],"duties":[],"discount_allocations":[]}],"payment_terms":null,"refunds":[],"shipping_address":{"first_name":"Amit","address1":"123","phone":"(987) 654-3210","city":"Houston","zip":"77584","province":"Texas","country":"United States","last_name":"Gmail","address2":"Broadway St.","company":"https:\/\/google.com","latitude":null,"longitude":null,"name":"Amit Gmail","country_code":"US","province_code":"TX"},"shipping_lines":[{"id":4315734704385,"carrier_identifier":null,"code":"Standard","delivery_category":null,"discounted_price":"6.90","discounted_price_set":{"shop_money":{"amount":"6.90","currency_code":"USD"},"presentment_money":{"amount":"6.90","currency_code":"USD"}},"phone":null,"price":"6.90","price_set":{"shop_money":{"amount":"6.90","currency_code":"USD"},"presentment_money":{"amount":"6.90","currency_code":"USD"}},"requested_fulfillment_service_id":null,"source":null,"title":"Standard","tax_lines":[],"discount_allocations":[]}]}}',1);
-
+					$shopifyOrderResult = $rest_client->post('orders',['order'=>$insertOrder]);
+					$lastorder = $shopifyOrderResult->getDecodedBody();
 					if (isset($lastorder['order']['id'])) {
 						try{
 							$this->manage_approvers($lastorder['order'],$shop);
@@ -1406,40 +1403,9 @@ class FrontEndController extends Controller {
 		if($first_approver_mail_body_1!='' && $first_approver_1!=''){
 			$dp = 'Approver Name : '.$approver_name.'<br>Cost Center Number : '.$po_number.'<br>';
 			$first_approver_mail_body_1 = str_replace('[DEPARTMENT_DATA]',$dp,$first_approver_mail_body_1);
-			//inex
-			//$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), 'amit.webinopoly@gmail.com', $subject, $first_approver_mail_body_1);
+			$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), 'amit.webinopoly@gmail.com', $subject, $first_approver_mail_body_1);
 			$send_to_customer = 'Yes';
 		}
-		/*if($second_approver_mail_body_1!='' && $second_approver_1!=''){
-			$dp = 'Approver Name : '.$department_1.'<br>Cost Center Number : '.$po_number.'<br>';
-			$second_approver_mail_body_1 = str_replace('[DEPARTMENT_DATA]',$dp,$second_approver_mail_body_1);
-			$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $second_approver_1, $subject, $second_approver_mail_body_1);
-			$send_to_customer = 'Yes';
-		}
-		if($first_approver_mail_body_2!='' && $first_approver_2!=''){
-			$dp = 'Approver Name : '.$department_2.'<br>Cost Center Number : '.$po_number.'<br>';
-			$first_approver_mail_body_2 = str_replace('[DEPARTMENT_DATA]',$dp,$first_approver_mail_body_2);
-			$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $first_approver_2, $subject, $first_approver_mail_body_2);
-			$send_to_customer = 'Yes';
-		}
-		if($second_approver_mail_body_2!='' && $second_approver_2!=''){
-			$dp = 'Approver Name : '.$department_2.'<br>Cost Center Number : '.$po_number.'<br>';
-			$second_approver_mail_body_2 = str_replace('[DEPARTMENT_DATA]',$dp,$second_approver_mail_body_2);
-			$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $second_approver_2, $subject, $second_approver_mail_body_2);
-			$send_to_customer = 'Yes';
-		}
-		if($first_approver_mail_body_3!='' && $first_approver_3!=''){
-			$dp = 'Approver Name : '.$department_3.'<br>Cost Center Number : '.$po_number.'<br>';
-			$first_approver_mail_body_3 = str_replace('[DEPARTMENT_DATA]',$dp,$first_approver_mail_body_3);
-			$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $first_approver_3, $subject, $first_approver_mail_body_3);
-			$send_to_customer = 'Yes';
-		}
-		if($second_approver_mail_body_3!='' && $second_approver_3!=''){
-			$dp = 'Approver Name : '.$department_3.'<br>Cost Center Number : '.$po_number.'<br>';
-			$second_approver_mail_body_3 = str_replace('[DEPARTMENT_DATA]',$dp,$second_approver_mail_body_3);
-			$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $second_approver_3, $subject, $second_approver_mail_body_3);
-			$send_to_customer = 'Yes';
-		}*/
 
 		//send email to customer
 		if($send_to_customer == 'Yes'){
@@ -1449,8 +1415,7 @@ class FrontEndController extends Controller {
 			$cust_email_body = view('mail_template.email_to_customer_while_order_placed',$param)->render();
 
 			$cust_email_subject = 'Shop Subsea 7 Company Store- #'.$order['order_number'].' Approval is PENDING';
-			//inex
-			//$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $order['customer']['email'], $cust_email_subject, $cust_email_body,env('SUPER_ADMIN_EMAIL'));
+			$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $order['customer']['email'], $cust_email_subject, $cust_email_body,env('SUPER_ADMIN_EMAIL'));
 		}
 
 		$shipping_address = @$order['shipping_address']['address1'].', '.@$order['shipping_address']['address2'].', '.@$order['shipping_address']['city'].' '.@$order['shipping_address']['province_code'].' '.@$order['shipping_address']['zip'].', '.@$order['shipping_address']['country'].', '.@$order['shipping_address']['phone'];
@@ -1549,12 +1514,10 @@ class FrontEndController extends Controller {
 
 					echo "<h3> Your order status has been sent. Thank you! </h3>";
 					if (!empty($firstto)) {
-						//inex
-						//$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $firstto, $subject, $message);
+						$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $firstto, $subject, $message);
 					}
 					if (!empty($secondto)) {
-						//inex
-						//$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $secondto, $subject, $message);
+						$AwsController->sendEmail(env('AWS_AUTHORIZED_EMAIL'), $secondto, $subject, $message);
 					}
 
 					// update note_attributes with approver-status
