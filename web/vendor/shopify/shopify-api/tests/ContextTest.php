@@ -9,13 +9,21 @@ use ReflectionClass;
 use Shopify\ApiVersion;
 use Shopify\Auth\Scopes;
 use Shopify\Context;
+use Shopify\Exception\FeatureDeprecatedException;
+use Shopify\Utils;
 use ShopifyTest\Auth\MockSessionStorage;
 
 final class ContextTest extends BaseTestCase
 {
     public function testCanCreateContext()
     {
-        Context::initialize('ash', 'steffi', ['sleepy', 'kitty'], 'my-friends-cats', new MockSessionStorage());
+        Context::initialize(
+            apiKey: 'ash',
+            apiSecretKey: 'steffi',
+            scopes: ['sleepy', 'kitty'],
+            hostName: 'my-friends-cats',
+            sessionStorage: new MockSessionStorage(),
+        );
 
         $this->assertEquals('ash', Context::$API_KEY);
         $this->assertEquals('steffi', Context::$API_SECRET_KEY);
@@ -33,7 +41,13 @@ final class ContextTest extends BaseTestCase
     // Context with different values has been set up in BaseTestCase
     public function testCanUpdateContext()
     {
-        Context::initialize('tuck', 'rocky', ['silly', 'doggo'], 'yay-for-doggos', new MockSessionStorage());
+        Context::initialize(
+            apiKey: 'tuck',
+            apiSecretKey: 'rocky',
+            scopes: ['silly', 'doggo'],
+            hostName: 'yay-for-doggos',
+            sessionStorage: new MockSessionStorage(),
+        );
 
         $this->assertEquals('tuck', Context::$API_KEY);
         $this->assertEquals('rocky', Context::$API_SECRET_KEY);
@@ -47,7 +61,13 @@ final class ContextTest extends BaseTestCase
         $this->expectExceptionMessage(
             'Cannot initialize Shopify API Library. Missing values for: apiKey, apiSecretKey, scopes, hostName'
         );
-        Context::initialize('', '', [], '', new MockSessionStorage());
+        Context::initialize(
+            apiKey: '',
+            apiSecretKey: '',
+            scopes: [],
+            hostName: '',
+            sessionStorage: new MockSessionStorage(),
+        );
     }
 
     public function testThrowsIfUninitialized()
@@ -57,7 +77,7 @@ final class ContextTest extends BaseTestCase
         $reflectedContext = new ReflectionClass('Shopify\Context');
         $reflectedIsInitialized = $reflectedContext->getProperty('IS_INITIALIZED');
         $reflectedIsInitialized->setAccessible(true);
-        $reflectedIsInitialized->setValue(false);
+        $reflectedIsInitialized->setValue(null, false);
 
         $this->expectException(\Shopify\Exception\UninitializedContextException::class);
         Context::throwIfUninitialized();
@@ -66,14 +86,13 @@ final class ContextTest extends BaseTestCase
     public function testThrowsIfPrivateApp()
     {
         Context::initialize(
-            'ash',
-            'steffi',
-            ['sleepy', 'kitty'],
-            'my-friends-cats',
-            new MockSessionStorage(),
-            'unstable',
-            true,
-            true,
+            apiKey: 'ash',
+            apiSecretKey: 'steffi',
+            scopes: ['sleepy', 'kitty'],
+            hostName: 'my-friends-cats',
+            sessionStorage: new MockSessionStorage(),
+            apiVersion: 'unstable',
+            isPrivateApp: true,
         );
         $this->expectException(\Shopify\Exception\PrivateAppException::class);
         $this->expectExceptionMessage('BOOOOOO');
@@ -117,12 +136,89 @@ final class ContextTest extends BaseTestCase
         $this->assertTrue($testLogger->hasEmergency('Emerg log'));
     }
 
+    public function testLogHelper()
+    {
+        $testLogger = new LogMock();
+        Context::$LOGGER = $testLogger;
+
+        Context::logDebug('Debug log');
+        $this->assertTrue($testLogger->hasDebug('Debug log'));
+
+        Context::logInfo('Info log');
+        $this->assertTrue($testLogger->hasInfo('Info log'));
+
+        Context::logNotice('Notice log');
+        $this->assertTrue($testLogger->hasNotice('Notice log'));
+
+        Context::logWarning('Warning log');
+        $this->assertTrue($testLogger->hasWarning('Warning log'));
+
+        Context::logError('Err log');
+        $this->assertTrue($testLogger->hasError('Err log'));
+
+        Context::logCritical('Crit log');
+        $this->assertTrue($testLogger->hasCritical('Crit log'));
+
+        Context::logAlert('Alert log');
+        $this->assertTrue($testLogger->hasAlert('Alert log'));
+
+        Context::logEmergency('Emerg log');
+        $this->assertTrue($testLogger->hasEmergency('Emerg log'));
+    }
+
+    public function testLogDeprecation()
+    {
+        $testLogger = new LogMock();
+        Context::$LOGGER = $testLogger;
+
+        Context::logDeprecation('9999.8888.7777', 'This message should be logged.');
+        $this->assertTrue($testLogger->hasWarning('This message should be logged.'));
+
+        $record = $testLogger->recordsByLevel[LogLevel::WARNING][0];
+
+        $this->assertArrayHasKey('context', $record);
+        $this->assertArrayHasKey('current_version', $record['context']);
+        $this->assertArrayHasKey('deprecated_from', $record['context']);
+        $this->assertEquals(Utils::getVersion(), $record['context']['current_version']);
+        $this->assertEquals('9999.8888.7777', $record['context']['deprecated_from']);
+    }
+
+    public function testLogDeprecationFeatureDeprecatedExceptionText()
+    {
+        $this->expectException(FeatureDeprecatedException::class);
+        $this->expectExceptionMessage('Feature was deprecated in version 1.0.0');
+
+        Context::logDeprecation('1.0.0', 'This message should not be logged because we trigger an exception first.');
+    }
+
+    public function testLogDeprecationVersionExceptionText()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Encountered an invalid version: "abc"');
+
+        Context::logDeprecation('abc', 'This message should not be logged.');
+    }
+
+    public function testLogDeprecationExceptionTooComplexVersion()
+    {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Encountered an invalid version: "1.2.3-RC"');
+
+        Context::logDeprecation('1.2.3-RC', 'This message should not be logged.');
+    }
+
     /**
      * @dataProvider canSetHostSchemeProvider
      */
     public function testCanSetHostScheme($host, $expectedScheme, $expectedHost)
     {
-        Context::initialize('ash', 'steffi', ['sleepy', 'kitty'], $host, new MockSessionStorage());
+        Context::initialize(
+            apiKey: 'ash',
+            apiSecretKey: 'steffi',
+            scopes: ['sleepy', 'kitty'],
+            hostName: $host,
+            sessionStorage: new MockSessionStorage(),
+        );
 
         $this->assertEquals($expectedHost, Context::$HOST_NAME);
         $this->assertEquals($expectedScheme, Context::$HOST_SCHEME);
@@ -142,7 +238,13 @@ final class ContextTest extends BaseTestCase
     public function testFailsOnInvalidHost()
     {
         $this->expectException(\Shopify\Exception\InvalidArgumentException::class);
-        Context::initialize('ash', 'steffi', ['sleepy', 'kitty'], 'not-a-host-!@#$%^&*()', new MockSessionStorage());
+        Context::initialize(
+            apiKey: 'ash',
+            apiSecretKey: 'steffi',
+            scopes: ['sleepy', 'kitty'],
+            hostName: 'not-a-host-!@#$%^&*()',
+            sessionStorage: new MockSessionStorage(),
+        );
     }
 
     public function testCanSetCustomShopDomains()
@@ -150,18 +252,14 @@ final class ContextTest extends BaseTestCase
         $domains = ['*.special-domain-1.io', '*.special-domain-2.io'];
 
         Context::initialize(
-            'ash',
-            'steffi',
-            ['sleepy', 'kitty'],
-            'my-friends-cats',
-            new MockSessionStorage(),
-            ApiVersion::LATEST,
-            true,
-            false,
-            null,
-            '',
-            null,
-            $domains
+            apiKey: 'ash',
+            apiSecretKey: 'steffi',
+            scopes: ['sleepy', 'kitty'],
+            hostName: 'my-friends-cats',
+            sessionStorage: new MockSessionStorage(),
+            apiVersion: ApiVersion::LATEST,
+            isPrivateApp: false,
+            customShopDomains: $domains,
         );
 
         $this->assertEquals($domains, Context::$CUSTOM_SHOP_DOMAINS);

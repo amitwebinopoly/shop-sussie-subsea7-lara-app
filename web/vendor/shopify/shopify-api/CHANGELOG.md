@@ -7,6 +7,28 @@ and adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+## v5.3.0 - 2024-01-10
+
+- [#318](https://github.com/Shopify/shopify-api-php/pull/318) [Minor] Adding support for 2024-01 API version
+
+## v5.2.0 - 2023-10-24
+
+- [#306](https://github.com/Shopify/shopify-api-php/pull/306) [Minor] Adding support for 2023-10 API version
+- [#297](https://github.com/Shopify/shopify-api-php/pull/297) [Patch] Fix CustomerAddress methods, FulfillmentRequest save method
+
+## v5.1.0 - 2023-07-11
+
+- [#285](https://github.com/Shopify/shopify-api-php/pull/285) [Minor] Adding support for 2023-07 API version
+
+## v5.0.0 - 2023-05-10
+
+- [#269](https://github.com/Shopify/shopify-api-php/pull/269) [bugfix] Refactored query string building to account for Shopify-specific array format
+- [#236](https://github.com/Shopify/shopify-api-php/pull/236) [bugfix] Correct requirements in `composer.json`
+- [#262](https://github.com/Shopify/shopify-api-php/pull/262) ⚠️ [Breaking] Added support for PHP 8.2, and removed support for PHP 7.4
+- [#264](https://github.com/Shopify/shopify-api-php/pull/264) [Patch] Remove support for currently-non-existent versions of PHP (8.3+)
+- [#272](https://github.com/Shopify/shopify-api-php/pull/272) ⚠️ [Breaking] Removed REST resources for 2022-01, update resources for remaining versions
+- [#270](https://github.com/Shopify/shopify-api-php/pull/270) [Patch] Add support for Event topic names
+
 ## v4.3.0 - 2023-04-12
 
 - [#259](https://github.com/Shopify/shopify-api-php/pull/259) Added support for 2023-04 API version, updated auto-generated REST resources

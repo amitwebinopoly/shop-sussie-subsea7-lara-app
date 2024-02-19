@@ -38,11 +38,12 @@ Route::get('/approver-confirm/{shop}/{status}/{oid}',[ FrontEndController::class
 //frontend
 Route::middleware([EnsureFrontendShopAuth::class])->group(function () {
     Route::post('/post_abandoned_cart',[ FrontEndController::class,'post_abandoned_cart']);
-    Route::post('/get_data_first_checkout',[ FrontEndController::class,'get_data_first_checkout']);
-    Route::post('/grab_data_from_checkout',[ FrontEndController::class,'grab_data_from_checkout']);
-    Route::post('/get_checkout_data',[ FrontEndController::class,'get_checkout_data']);
+    //Route::post('/get_data_first_checkout',[ FrontEndController::class,'get_data_first_checkout']);
+    //Route::post('/grab_data_from_checkout',[ FrontEndController::class,'grab_data_from_checkout']);
+    //Route::post('/get_checkout_data',[ FrontEndController::class,'get_checkout_data']);
+    Route::post('/get_draft_order_data',[ FrontEndController::class,'get_draft_order_data']);
     Route::post('/store_abondoned_steps',[ FrontEndController::class,'store_abondoned_steps']);
-    Route::post('/apply_discount_in_checkout',[ FrontEndController::class,'apply_discount_in_checkout']);
-    Route::post('/remove_discount_in_checkout',[ FrontEndController::class,'remove_discount_in_checkout']);
+    //Route::post('/apply_discount_in_checkout',[ FrontEndController::class,'apply_discount_in_checkout']);
+    //Route::post('/remove_discount_in_checkout',[ FrontEndController::class,'remove_discount_in_checkout']);
     Route::post('/process_checkout',[ FrontEndController::class,'process_checkout']);
 });

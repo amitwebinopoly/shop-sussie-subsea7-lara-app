@@ -1,5 +1,5 @@
 {
-  "name": "lara-app",
+  "name": "shop-sussie-subsea7-app-v2",
   "version": "1.0.0",
   "license": "UNLICENSED",
   "scripts": {
@@ -12,8 +12,14 @@
     "info": "shopify app info"
   },
   "dependencies": {
-    "@shopify/app": "3.44.1",
-    "@shopify/cli": "3.44.1"
+    "@shopify/app": "^3.55.2",
+    "@shopify/cli": "^3.55.2"
   },
-  "author": "AMIT"
+  "author": "AMIT",
+  "private": true,
+  "workspaces": [
+    "extensions/*",
+    "web",
+    "web/frontend"
+  ]
 }

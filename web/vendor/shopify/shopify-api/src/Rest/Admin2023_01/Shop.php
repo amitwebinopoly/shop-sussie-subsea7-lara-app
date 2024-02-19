@@ -16,11 +16,10 @@ use Shopify\Rest\Base;
  * @property string|null $address2
  * @property bool|null $checkout_api_supported
  * @property string|null $city
- * @property string|null $cookie_consent_level
  * @property string|null $country
  * @property string|null $country_code
  * @property string|null $country_name
- * @property string|null $county_taxes
+ * @property bool|null $county_taxes
  * @property string|null $created_at
  * @property string|null $currency
  * @property string|null $customer_email
@@ -62,7 +61,7 @@ use Shopify\Rest\Base;
  * @property string|null $shop_owner
  * @property string|null $source
  * @property string|null $tax_shipping
- * @property string|null $taxes_included
+ * @property bool|null $taxes_included
  * @property string|null $timezone
  * @property bool|null $transactional_sms_disabled
  * @property string|null $updated_at

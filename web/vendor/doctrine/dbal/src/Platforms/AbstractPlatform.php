@@ -29,6 +29,8 @@ use Doctrine\DBAL\Schema\Sequence;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Schema\TableDiff;
 use Doctrine\DBAL\Schema\UniqueConstraint;
+use Doctrine\DBAL\SQL\Builder\DefaultSelectSQLBuilder;
+use Doctrine\DBAL\SQL\Builder\SelectSQLBuilder;
 use Doctrine\DBAL\SQL\Parser;
 use Doctrine\DBAL\TransactionIsolationLevel;
 use Doctrine\DBAL\Types;
@@ -102,6 +104,14 @@ abstract class AbstractPlatform
      * @var KeywordList|null
      */
     protected $_keywords;
+
+    private bool $disableTypeComments = false;
+
+    /** @internal */
+    final public function setDisableTypeComments(bool $value): void
+    {
+        $this->disableTypeComments = $value;
+    }
 
     /**
      * Sets the EventManager used by the Platform.
@@ -578,7 +588,7 @@ abstract class AbstractPlatform
 
         $comment = $column->getComment();
 
-        if ($column->getType()->requiresSQLCommentHint($this)) {
+        if (! $this->disableTypeComments && $column->getType()->requiresSQLCommentHint($this)) {
             $comment .= $this->getDoctrineTypeComment($column->getType());
         }
 
@@ -1750,10 +1760,19 @@ abstract class AbstractPlatform
     /**
      * Returns the FOR UPDATE expression.
      *
+     * @deprecated This API is not portable. Use {@link QueryBuilder::forUpdate()}` instead.
+     *
      * @return string
      */
     public function getForUpdateSQL()
     {
+        Deprecation::triggerIfCalledFromOutside(
+            'doctrine/dbal',
+            'https://github.com/doctrine/dbal/pull/6191',
+            '%s is deprecated as non-portable.',
+            __METHOD__,
+        );
+
         return 'FOR UPDATE';
     }
 
@@ -1785,10 +1804,19 @@ abstract class AbstractPlatform
      * This defaults to the ANSI SQL "FOR UPDATE", which is an exclusive lock (Write). Some database
      * vendors allow to lighten this constraint up to be a real read lock.
      *
+     * @deprecated This API is not portable.
+     *
      * @return string
      */
     public function getReadLockSQL()
     {
+        Deprecation::trigger(
+            'doctrine/dbal',
+            'https://github.com/doctrine/dbal/pull/6191',
+            '%s is deprecated as non-portable.',
+            __METHOD__,
+        );
+
         return $this->getForUpdateSQL();
     }
 
@@ -1797,10 +1825,19 @@ abstract class AbstractPlatform
      *
      * The semantics of this lock mode should equal the SELECT .. FOR UPDATE of the ANSI SQL standard.
      *
+     * @deprecated This API is not portable.
+     *
      * @return string
      */
     public function getWriteLockSQL()
     {
+        Deprecation::trigger(
+            'doctrine/dbal',
+            'https://github.com/doctrine/dbal/pull/6191',
+            '%s is deprecated as non-portable.',
+            __METHOD__,
+        );
+
         return $this->getForUpdateSQL();
     }
 
@@ -2042,6 +2079,11 @@ abstract class AbstractPlatform
             ($createFlags & self::CREATE_INDEXES) > 0,
             ($createFlags & self::CREATE_FOREIGNKEYS) > 0,
         );
+    }
+
+    public function createSelectSQLBuilder(): SelectSQLBuilder
+    {
+        return new DefaultSelectSQLBuilder($this, 'FOR UPDATE', 'SKIP LOCKED');
     }
 
     /**
@@ -4155,7 +4197,7 @@ abstract class AbstractPlatform
      */
     public function supportsCreateDropDatabase()
     {
-        Deprecation::trigger(
+        Deprecation::triggerIfCalledFromOutside(
             'doctrine/dbal',
             'https://github.com/doctrine/dbal/pull/5513',
             '%s is deprecated.',
@@ -4626,6 +4668,10 @@ abstract class AbstractPlatform
             return false;
         }
 
+        if (! $this->columnDeclarationsMatch($column1, $column2)) {
+            return false;
+        }
+
         // If the platform supports inline comments, all comparison is already done above
         if ($this->supportsInlineColumnComments()) {
             return true;
@@ -4636,6 +4682,17 @@ abstract class AbstractPlatform
         }
 
         return $column1->getType() === $column2->getType();
+    }
+
+    /**
+     * Whether the database data type matches that expected for the doctrine type for the given colunms.
+     */
+    private function columnDeclarationsMatch(Column $column1, Column $column2): bool
+    {
+        return ! (
+            $column1->hasPlatformOption('declarationMismatch') ||
+            $column2->hasPlatformOption('declarationMismatch')
+        );
     }
 
     /**

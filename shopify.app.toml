@@ -1,3 +1,28 @@
-# This file stores configurations for your Shopify app.
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-scopes = "read_customers,write_products,read_themes,write_files,write_checkouts,write_orders"
+client_id = "95b8c377bb9a254acb9912d373465eb6"
+name = "shop-sussie-subsea7-app-v2"
+application_url = "https://circles-grove-objectives-renaissance.trycloudflare.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "demo-tsc-wallet-charge-store.myshopify.com"
+include_config_on_deploy = true
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_customers,write_products,read_themes,write_files,write_checkouts,write_orders,write_draft_orders"
+
+[auth]
+redirect_urls = [
+  "https://circles-grove-objectives-renaissance.trycloudflare.com/auth/callback",
+  "https://circles-grove-objectives-renaissance.trycloudflare.com/auth/shopify/callback",
+  "https://circles-grove-objectives-renaissance.trycloudflare.com/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2024-01"
+
+[pos]
+embedded = false

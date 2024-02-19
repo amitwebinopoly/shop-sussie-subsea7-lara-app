@@ -1,7 +1,0 @@
-.idea
-.vscode
-node_modules
-package-lock.json
-web/composer.lock
-web/frontend/node_modules
-web/frontend/package-lock.json

@@ -87,6 +87,58 @@ final class UtilsTest extends BaseTestCase
         ];
     }
 
+    /**
+     * @dataProvider buildQueryStringProvider
+     */
+    public function testBuildQueryString($params, $queryString)
+    {
+        $this->assertEquals($queryString, Utils::buildQueryString($params));
+    }
+
+    public function buildQueryStringProvider()
+    {
+        return [
+            [
+                [],
+                ''
+            ],
+            [
+                [
+                    'hmac' => 'ThisShouldNotAppearInTheString',
+                    'foo' => 'ThisShould',
+                    'bar' => 'AsShouldThis',
+                ],
+                'foo=ThisShould&bar=AsShouldThis'
+            ],
+            [
+                [
+                    'hmac' => 'ThisShouldNotAppearInTheString',
+                    'someArray' => [
+                      'foo',
+                      'bar',
+                      1,
+                    ],
+                ],
+                'someArray=%5B%22foo%22%2C%22bar%22%2C%221%22%5D' // URLEncoded for: ["foo","bar","1"]
+            ],
+        ];
+    }
+
+    public function testEmptyHmac()
+    {
+        $this->assertEquals(false, Utils::validateHmac(
+            [],
+            'I AM SECRET'
+        ));
+
+        $this->assertEquals(false, Utils::validateHmac(
+            [
+                'hmac' => 'SomeHash',
+            ],
+            ''
+        ));
+    }
+
     public function testValidHmac()
     {
         // phpcs:ignore
@@ -400,6 +452,13 @@ final class UtilsTest extends BaseTestCase
         $url = "my-app-url.io/path";
 
         $this->assertEquals("https://$url/apps/my-app-key", Utils::getEmbeddedAppUrl(base64_encode($url)));
+    }
+
+    public function testGetVersion()
+    {
+        $versionString = Utils::getVersion();
+
+        $this->assertMatchesRegularExpression('#^\d+.\d+.\d+$#', $versionString);
     }
 
     private function encodeJwtPayload(): string

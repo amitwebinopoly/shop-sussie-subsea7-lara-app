@@ -1,0 +1,240 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : 22 Aug, 2018, 11:35:37 AM
+    Author     : Admin
+*/
+
+body { display: block;    margin: 0;}
+.main-container {    padding-top: 4em; padding-left: 55px; padding-right:55px;  padding-bottom: 4em;}
+.section-wrapper {  width: 32%;  float: left;  padding-left: 1%;}
+.custom-container { float: left; width: 100%; }
+.row-one {
+    float: left;
+    width: 97%;
+    padding: 0 9px;
+}
+.section-title{
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+span.title {
+    float: left;
+    width: 15%;
+}
+.uniform-input {
+    position: relative;
+    margin: 0px;
+    width: 100%;
+    border-radius: 5px;
+    clear: both;
+    height: auto;
+    text-align: left;
+
+}
+.uniform-input input ,select {
+    -moz-appearance: none;
+    background-color: transparent;
+    display: block;
+    float: none;
+    height: auto;
+    line-height: 1.8;
+    margin: 0;
+   width: 92%;
+    box-shadow: none;
+    position: relative;
+    z-index: 1;
+    font-weight: normal;
+    border: none;
+    -webkit-box-shadow: 0 0 0 1px #bababa;
+    box-shadow: 0 0 0 1px #bababa;
+    padding: 7px 4px;
+    border-radius: 5px;
+}
+.column-one {
+    width: 49%;
+    float: left;
+    margin-left: 1%;
+}
+.formtitle {
+    margin: 15px 0;
+    float: left;
+    width: 100%;
+    text-transform: capitalize;
+    font-size: 15px;
+}
+select.uniform-select {
+    padding: 11px 0;
+}
+.inner-wrap{float:left; width:100%; margin: 15px 0;}
+.column{float:left; width:100%;}
+.uniform-label {float:left; width:100%; margin: 6px 0; font-size: 15px;}
+span.title {
+     width: 20px;
+    height: 20px;
+    margin-top: 3px;
+    background: #409865;
+    color: #fff;
+    margin-right: 10px;
+    text-align: center;
+    padding: 1px;
+    border-radius: 1px;
+    box-shadow: 7px 1px 8px #e9f1ed;    
+}
+.freeshipping_wrap {
+    padding: 8px 0px;
+    float: left;
+    margin-bottom: 15px;
+    width: 100%;
+    background: #eee;
+}
+
+.apply-section button {
+    background: #df5a2c;
+    color: #fff;   
+    padding: 0px 23px;
+}
+.apply-section {
+   background: #c04e26;
+    float: right;   
+    margin: 30px 0; 
+    padding: 3px;
+    border-radius: 4px;
+}
+span.agree {
+    color: gray;
+    font-weight: 500;
+}
+.product-section {
+    float: left;
+    width: 100%;
+    margin: 15px 0;
+}
+.product-section table {
+    width: 100%;
+    text-align: left;
+}
+.product-section td input[type="number"] {
+    width: 30px;
+    height: 20px;
+}
+.productlistheading {
+    color: #666;
+}
+.section-terms {
+    float: left;
+    width: 100%;
+    margin: 10px 0;
+    background: #eee;
+}
+.section-subheading {
+    padding: 0 10px;
+    font-size: 13px;    
+}
+.placeorder-section {
+    background: #c04e26;
+    float: left;
+    width: 100%;
+    margin: 60px 0;
+    border-radius: 4px;
+}
+.placeorder span {
+    border: 0px solid #fff;
+    width: 100%;
+    padding: 0px;
+    /* float: left; */
+    /* margin: 0 2px; */
+    background: #d7572a;  
+    padding: 7px 0;
+    color: #fff;
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+}
+.placeorder {    
+    width: 99%;   
+    padding: 0;
+    margin: 3px 3px;
+}
+.apply span {
+    border: 0px solid #fff;
+    width: 100%;
+    padding: 0px;
+    /* float: left; */
+    /* margin: 0 2px; */
+    background: #d7572a;
+    padding: 7px 0;
+    color: #fff;
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+}
+.productlist i.fa.fa-close {
+    float: right;
+    width: 4%;
+    margin: 15px 0;
+    color: gray;
+}
+.pricetitle {width:94%;  color: #666;}
+.product-section .section-title {
+    color: #666;
+   
+}
+.sub-total {
+    float: right;
+}
+.product-section table {    
+
+    color: #666;
+    font-weight: 700;
+}
+.purchase {
+    float: left;
+    width: 100%;
+    
+}
+.purchase input {
+    /* width: 100%; */
+    /* padding: 10px; */
+    margin: 15px 0;
+    background-color: transparent;
+    display: block;
+    float: none;
+    height: auto;
+    line-height: 1.8;
+    margin: 0;
+    width: 98%;
+    box-shadow: none;
+    position: relative;
+    z-index: 1;
+    font-weight: normal;
+    border: none;
+    -webkit-box-shadow: 0 0 0 1px #bababa;
+    box-shadow: 0 0 0 1px #bababa;
+    padding: 8px 4px;
+    border-radius: 5px;
+}
+.uniform-input.select::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 50px;
+    background-position: center center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    background-image: url(../images/checkout/dropdown-arrow-down-dark.png);      
+}
+.main-heading .section-title {
+    font-size: 22px;
+}
+
+@media screen and (min-device-width: 300px) and (max-device-width: 991px) {
+.section-wrapper {    width: 100%;}
+
+}

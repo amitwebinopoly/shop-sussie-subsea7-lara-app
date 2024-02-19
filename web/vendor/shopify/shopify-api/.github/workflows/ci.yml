@@ -9,9 +9,9 @@ jobs:
       fail-fast: false
       matrix:
         php-version:
-          - "7.4"
           - "8.0"
           - "8.1"
+          - "8.2"
     steps:
       - uses: actions/checkout@master
 
@@ -29,8 +29,17 @@ jobs:
       - name: Run linter
         run: composer lint
 
+      - name: Run validation on composer.json
+        run: composer validate
+
+      - name: Run normalizer on composer.json
+        run: composer normalize --dry-run
+
       - name: Run tests
         run: composer test
 
       - name: Run REST resource tests
         run: composer test_rest_resources
+
+      - name: Check dependencies are listed
+        run: vendor/bin/composer-require-checker

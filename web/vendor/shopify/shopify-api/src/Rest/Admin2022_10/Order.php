@@ -23,6 +23,7 @@ use Shopify\Rest\Base;
  * @property string|null $checkout_token
  * @property array|null $client_details
  * @property string|null $closed_at
+ * @property string|null $confirmation_number
  * @property string|null $created_at
  * @property string|null $currency
  * @property string|null $current_subtotal_price
@@ -69,7 +70,7 @@ use Shopify\Rest\Base;
  * @property string|null $source_identifier
  * @property string|null $source_name
  * @property string|null $source_url
- * @property float|null $subtotal_price
+ * @property string|null $subtotal_price
  * @property array|null $subtotal_price_set
  * @property string|null $tags
  * @property array[]|null $tax_lines

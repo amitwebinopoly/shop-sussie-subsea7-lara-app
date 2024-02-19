@@ -201,7 +201,8 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
             goto_payment_section(interval);
         }, 2000);
         <?php } else { ?>
-        createFirstCheckout();
+        //createFirstCheckout();
+        get_draft_order_data();
         <?php }?>
 
     });
@@ -233,7 +234,8 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
             }
 
             $("#continue_to_ship_method_btn").attr('disabled', true);
-            calculate_prices('move_to_step2');
+            //calculate_prices('move_to_step2');
+            get_draft_order_data('move_to_step2');
         }
     });
 
@@ -464,14 +466,14 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
         if (validateCustomerInfo()) {
             setShippingAddress();
             setShippingAddToBill();
-            $('.shipping_radio').trigger('change');
+            //$('.shipping_radio').trigger('change');
         }
     });
     $('#tab-3-open').click(function() {
         if (validateCustomerInfo()) {
             setShippingAddress();
             setShippingAddToBill();
-            $('.shipping_radio').trigger('change');
+            //$('.shipping_radio').trigger('change');
         }
     });
     $('#shipping_country').change(function() {
@@ -530,7 +532,8 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
         shipping_lines["source"] = 'shopify';
         var shipping_linesjson = JSON.stringify(shipping_lines);
         $('#shipping_lines').val(shipping_linesjson);
-        calculate_prices('on_ship_change');
+        //calculate_prices('on_ship_change');
+        get_draft_order_data('move_to_step2');
     });
 
     function openCity(event, cityName) {
@@ -1308,51 +1311,351 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
         }
     }
 
+    function get_draft_order_data(trigger_mode='') {
+        var shipping_email = $('#checkout_email').val().trim();
+        var shipping_phone = $('#phone').val().trim();
+        var shipping_first_name = $('#shipping_first_name').val().trim();
+        var shipping_last_name = $('#shipping_last_name').val().trim();
+        var shipping_address = $('#shipping_address').val().trim();
+        var shipping_address2 = $('#shipping_address2').val().trim();
+        var shipping_city = $('#shipping_city').val().trim();
+        var shipping_country = $("#shipping_country").val();
+        var shipping_state = $("#shipping_state").val();
+        var shipping_pincode = $("#shipping_pincode").val();
+
+        var billing_first_name = $('#billing_first_name').val().trim();
+        var billing_last_name = $('#billing_last_name').val().trim();
+        var billing_company = $('#billing_company').val().trim();
+        var billing_phone = $('#billing_phone').val().trim();
+        var billing_address = $('#billing_address1').val().trim();
+        var billing_address2 = $('#billing_address2').val().trim();
+        var billing_city = $('#billing_city').val().trim();
+        var billing_country = $("#billing_country").val();
+        var billing_state = $("#billing_state").val();
+        var billing_pincode = $("#billing_pincode").val();
+
+        var customer_id = $('#customer_id').val().trim();
+        var cart = $('input[name="cart"]').val().trim();
+        var cartItems = $("#item_arr_for_calc").val();
+        var shipping_lines = $("#shipping_lines").val();
+
+        var shop = $('#shop_url').val();
+        var currency_symbol = '<?= $shop_currency_symbol ?>';
+        var url = '/{{$proxy_path}}/api/get_draft_order_data';
+        $("#cont_to_pay_method").attr('disabled', true);
+
+        if(trigger_mode=='on_ship_change'){
+            $("#shpping_rates_loader").hide();
+            $("#shpping_rates_div").show().css('pointer-events','none');
+        }else{
+            $("#shpping_rates_loader").show();
+            $("#shpping_rates_div").hide();
+        }
+        $.ajax({
+            type: "POST",
+            url: url,
+            dataType: 'json',
+            data: {
+                shipping_email: shipping_email,
+                shipping_phone: shipping_phone,
+                shipping_first_name: shipping_first_name,
+                shipping_last_name: shipping_last_name,
+                shipping_address: shipping_address,
+                shipping_address2: shipping_address2,
+                shipping_city: shipping_city,
+                shipping_country: shipping_country,
+                shipping_state: shipping_state,
+                shipping_pincode: shipping_pincode,
+
+                billing_first_name: billing_first_name,
+                billing_last_name: billing_last_name,
+                billing_phone: billing_phone,
+                billing_company: billing_company,
+                billing_address: billing_address,
+                billing_address2: billing_address2,
+                billing_city: billing_city,
+                billing_country: billing_country,
+                billing_state: billing_state,
+                billing_pincode: billing_pincode,
+
+                customer_id: customer_id,
+                cart: cart,
+                shop: shop,
+                currency_symbol: currency_symbol,
+                shipping_lines: shipping_lines,
+                allow_free_shipping: '{{@$_POST['allow_free_shipping']}}'
+            },
+            success: function(result) {
+                $("#cont_to_pay_method").removeAttr('disabled');
+                $("#cont_to_pay_method").html('Continue to payment'); // nik 05/25/2021
+
+                if(trigger_mode=='on_ship_change'){
+                    $("#shpping_rates_loader").hide();
+                    $("#shpping_rates_div").show().css('pointer-events','unset');
+                }else{
+                    $("#shpping_rates_loader").hide();
+                    $("#shpping_rates_div").show();
+                }
+
+                var obj = result;
+                if (obj.success == 'true') {
+                    if(trigger_mode=='move_to_step2'){
+                        $("#continue_to_ship_method_btn").removeAttr('disabled');
+                        google_ana_page_load(2, '');
+                        store_abondoned_step_1();
+                        openCity(event, 'tab-2');
+                        if (document.getElementById('main_div_discount_code')) {
+                            //document.getElementById('main_div_discount_code').style.display = 'block';
+                        }
+                        document.getElementById('tab-2-open').click();
+                        create_postscript_subscription();
+                    }
+                    $("#vendor_shipping_error_div").hide();
+
+                    //if requires_shipping is true, but there is no shipping_rates. then don't allow to checkout
+                    /*$("#vendor_shipping_error_div").hide();
+                    if (obj.DATA != undefined && obj.DATA.checkout_data != undefined && obj.DATA.checkout_data.requires_shipping == true){
+                        if (obj.DATA.availableShippingRates == undefined
+                                || (obj.DATA.availableShippingRates != undefined && obj.DATA.availableShippingRates.shippingRates == undefined)
+                                || (obj.DATA.availableShippingRates != undefined && obj.DATA.availableShippingRates.shippingRates.length == 0)) {
+                            $("#vendor_shipping_error_div").show();
+                            $("#vendor_shipping_error_msg").html(vendor_shipping_error_msg);
+                            $("#defaultOpen").click();
+                        }
+                    }*/
+
+                    //display all available shipping methods
+                    setShippingMethods(obj);
+                    //setProductSummery(obj);
+
+                    var cart_total = 0;
+
+                    //calculate item price and subtotal
+                    var cart_sub_total = 0;
+                    var cartItemsArr = JSON.parse(cartItems);
+                    if (cartItemsArr.length > 0) {
+                        $(cartItemsArr).each(function(k, v) {
+                            var item_price_doller = parseFloat(v.price / 100);
+                            var item_sub_total = item_price_doller * v.quantity;
+                            cart_sub_total += parseFloat(item_sub_total);
+                        });
+                    }
+                    $("#cart_subtotal").html(currency_symbol + (cart_sub_total).toFixed(2));
+                    cart_total += parseFloat(cart_sub_total);
+
+                    //calculate checkout discount
+                    var is_shipping_free = 'No';
+                    var discount_price = 0;
+                    $('.applied-reduction-code').hide();
+                    $('#reduction_code_text').html('');
+                    $('#reduction_code_text_mobile').html('');
+                    $('#reduction_code_div').hide();
+                    $('#reduction_code_div_mobile').hide();
+                    if (obj.DATA != undefined && obj.DATA.checkout_data != undefined && obj.DATA
+                                    .checkout_data.applied_discount != undefined && obj.DATA.checkout_data
+                                    .applied_discount.applicable == true) {
+                        $('#discount_code').val('').attr('readonly', 1);
+                        $('#discount_code_mobile').val('').attr('readonly', 1);
+                        $('#cart_discount_tr').show();
+                        $('#discount_code_btn').addClass('btn--disabled').attr('disabled', true);
+                        $('#discount_code_btn_mobile').addClass('btn--disabled').attr('disabled', true);
+
+                        discount_price = parseFloat(obj.DATA.checkout_data.applied_discount.amount);
+                        $('#cart_discount_div').html('- ' + currency_symbol + discount_price.toFixed(2));
+                        $('#applied-reduction-code').html(obj.DATA.checkout_data.applied_discount.title);
+                        $('.applied-reduction-code').show();
+                        $('#reduction_code_text').html(obj.DATA.checkout_data.applied_discount.title);
+                        $('#reduction_code_text_mobile').html(obj.DATA.checkout_data.applied_discount.title);
+                        $('#reduction_code_div').show();
+                        $('#reduction_code_div_mobile').show();
+                        //$("#main_div_discount_code").hide();
+                    } else if (obj.DATA != undefined && obj.DATA.checkout_data != undefined && obj.DATA
+                                    .checkout_data.applied_discount != undefined && obj.DATA.checkout_data
+                                    .applied_discount.applicable == false) {
+                        $('#discount-msg').html(obj.DATA.checkout_data.applied_discount.non_applicable_reason).show();
+                        $('#discount-msg-mobile').html(obj.DATA.checkout_data.applied_discount.non_applicable_reason).show();
+                        $('#main_div_discount_code').show();
+                    } else {
+                        if (obj.DATA != undefined && obj.DATA.checkout_data != undefined && obj.DATA
+                                        .checkout_data.line_items != undefined && obj.DATA.checkout_data.line_items
+                                        .length > 0) {
+                            $(obj.DATA.checkout_data.line_items).each(function(k_item, v_item) {
+                                if (v_item.applied_discounts != undefined && v_item
+                                                .applied_discounts[0] != undefined) {
+                                    $('#discount_code').val('').attr('readonly', 1);
+                                    $('#discount_code_mobile').val('').attr('readonly', 1);
+                                    $('#cart_discount_tr').show();
+                                    $('#discount_code_btn').addClass('btn--disabled').attr('disabled', true);
+                                    $('#discount_code_btn_mobile').addClass('btn--disabled').attr('disabled', true);
+
+                                    discount_price = parseFloat(v_item.applied_discounts[0]
+                                            .amount);
+                                    $('#cart_discount_div').html('- ' + currency_symbol +
+                                    discount_price.toFixed(2));
+                                    $('#applied-reduction-code').html(v_item.applied_discounts[0].description);
+                                    $('.applied-reduction-code').show();
+
+                                    $('#reduction_code_text').html(v_item.applied_discounts[0].description);
+                                    $('#reduction_code_text_mobile').html(v_item.applied_discounts[0].description);
+                                    $('#reduction_code_div').show();
+                                    $('#reduction_code_div_mobile').show();
+                                    //$("#main_div_discount_code").hide();
+                                }
+                            });
+                        }
+                    }
+
+                    cart_total -= parseFloat(discount_price);
+
+                    //calculate shipping
+                    var shipping_price = 0;
+                    if ($("#sms_multi_shipping_lines").val() != '') {
+                        let sms_multi_shipping_lines = JSON.parse($("#sms_multi_shipping_lines").val());
+                        $.each(sms_multi_shipping_lines, function(k, sms) {
+                            shipping_price += parseFloat(sms.price);
+                        });
+                        $('#cart_shipping').html(currency_symbol + shipping_price.toFixed(2));
+                    } else if (is_shipping_free == 'Yes') {
+                        $('#cart_shipping').html('Free');
+                        $('#shipping_lines').val('{"title":"Free","price":0,"code":"Free","source":"shopify"}');
+                    } else {
+                        if ($(".shipping_radio").length > 0) {
+                            var shipping = $(".shipping_radio:checked");
+                            shipping_price = shipping.data('price');
+
+                            $('.shipping_method_div').html(shipping.data('name') + ' - <strong>' + currency_symbol + shipping_price+'</strong>');
+                            $('#cart_shipping').html(currency_symbol + (parseFloat(shipping_price)).toFixed(2) );
+
+                            var shipping_lines = {};
+                            shipping_lines["id"] = shipping.data('id');
+                            shipping_lines["title"] = shipping.data('name');
+                            shipping_lines["price"] = shipping.data('price');
+                            shipping_lines["code"] = shipping.data('name');
+                            shipping_lines["source"] = 'shopify';
+                            var shipping_linesjson = JSON.stringify(shipping_lines);
+                            $('#shipping_lines').val(shipping_linesjson);
+                        }
+                    }
+                    cart_total += parseFloat(shipping_price);
+
+                    //calculate tax
+                    var need_to_calculate_tax = '<?= $need_to_calculate_tax ?>';
+                    var tax_lines = [];
+                    var total_tax_amount = 0;
+                    if ($("#sms_multi_tax_lines").val() != '') {
+                        let sms_multi_tax_lines = JSON.parse($("#sms_multi_tax_lines").val());
+                        $.each(sms_multi_tax_lines, function(k, sms) {
+                            total_tax_amount += parseFloat(sms.price);
+                        });
+                        if (need_to_calculate_tax == 'Yes') {
+                            cart_total += parseFloat(total_tax_amount);
+                            $('#cart_taxes').html(currency_symbol + parseFloat(total_tax_amount).toFixed(2));
+                        } else {
+                            $('#cart_taxes').html('(Included) ' + currency_symbol + parseFloat(total_tax_amount).toFixed(2));
+                        }
+                    } else if (obj.data != undefined && obj.data.taxLines != undefined && obj.data.taxLines.length > 0) {
+                        $(obj.data.taxLines).each(function(tl_k, tl_v) {
+                            var tax_rate = tl_v.rate;
+                            var tax_title = tl_v.title;
+
+                            <?php if (isset($cust_ws_tag) && !empty($cust_ws_tag)) { ?>
+                            // here we can get direct price in tax_line, but if square wholesale discount apply then we need to change tax-price based on product new price
+                            var tax_price = (parseFloat(cart_total) * parseFloat(tax_rate)).toFixed(2);
+                            <?php } else { ?>
+                            var tax_price = parseFloat(tl_v.priceSet.presentmentMoney.amount);
+                            <?php }?>
+                            total_tax_amount += parseFloat(tax_price);
+
+                            var tmp_tl = {};
+                            tmp_tl["title"] = tax_title;
+                            tmp_tl["price"] = tax_price;
+                            tmp_tl["rate"] = tax_rate;
+                            tax_lines.push(tmp_tl);
+                        });
+                        $('#tax_lines').val(JSON.stringify(tax_lines));
+                        if (need_to_calculate_tax == 'Yes') {
+                            cart_total += parseFloat(total_tax_amount);
+                            $('#cart_taxes').html(currency_symbol + parseFloat(total_tax_amount).toFixed(2));
+                        } else {
+                            $('#cart_taxes').html('(Included) ' + currency_symbol + parseFloat(total_tax_amount).toFixed(2));
+                        }
+                    } else {
+                        $('#cart_taxes').html('-');
+                        $('#tax_lines').val('');
+                    }
+                    $("#cart_taxes_tr").show();
+
+                    //calculate giftcard
+                    /*var giftcard_price = 0;
+                    $('.applied-giftcard-code-div').hide();
+                    if (obj.DATA != undefined && obj.DATA.appliedGiftCards != undefined && obj.DATA.appliedGiftCards[0] != undefined) {
+                        var giftcard_id = obj.DATA.appliedGiftCards[0].id;
+                        $('#giftcard_code').val('').attr('readonly', 1);
+                        $('#cart_giftcard_tr').show();
+                        $('#giftcard_code_btn').addClass('btn--disabled').attr('disabled', true);
+
+                        giftcard_price = parseFloat(obj.DATA.appliedGiftCards[0].presentmentAmountUsed
+                                .amount);
+                        $('#cart_giftcard_div').html('- ' + currency_symbol + giftcard_price.toFixed(2));
+                        $('#applied-giftcard-code').html('**** ' + obj.DATA.appliedGiftCards[0]
+                                .lastCharacters);
+                        $("#remove-giftcard").data('giftcard_id', giftcard_id).attr('data-giftcard_id',
+                                giftcard_id);
+                        $('.applied-giftcard-code-div').show();
+                        $("#main_div_discount_code").hide();
+                    }
+                    cart_total -= parseFloat(giftcard_price);*/
+
+                    //set cart-total
+                    $("#cart_total_price").html(currency_symbol + cart_total.toFixed(2));
+                    $("#mobile_total_final_price").html(currency_symbol + cart_total.toFixed(2));
+
+                    if(parseFloat(discount_price) > 0){
+                        $("#mobile_total_strike_price").html('<s>'+currency_symbol + (cart_total+parseFloat(discount_price)).toFixed(2)+'</s>').show();
+                    }else{
+                        $("#mobile_total_strike_price").hide();
+                    }
+
+                }
+            }
+        });
+    }
+
     function setShippingMethods(obj) {
         var sphtml = '';
-        if (obj.DATA != undefined && obj.DATA.availableShippingRates != undefined && obj.DATA.availableShippingRates
-                        .shippingRates != undefined) {
-            if (obj.DATA.availableShippingRates.shippingRates.length > 0) {
-                var cnt = 0;
-                var default_shipping_method = '';
-                if ($(".shipping_radio").length > 0) {
-                    default_shipping_method = $(".shipping_radio:checked").data('id');
+        if (obj.data != undefined && obj.data.availableShippingRates != undefined && obj.data.availableShippingRates.length > 0) {
+            var cnt = 0;
+            var default_shipping_method = '';
+            if ($(".shipping_radio").length > 0) {
+                default_shipping_method = $(".shipping_radio:checked").data('id');
+            }
+            $(obj.data.availableShippingRates).each(function(k, v) {
+                var checked = '';
+                if (default_shipping_method == v.handle) {
+                    checked = 'checked';
+                } else if (cnt == 0) {
+                    checked = 'checked';
                 }
-                $(obj.DATA.availableShippingRates.shippingRates).each(function(k, v) {
-                    var checked = '';
-                    if (default_shipping_method == v.handle) {
-                        checked = 'checked';
-                    } else if (cnt == 0) {
-                        checked = 'checked';
-                    }
-                    sphtml += '<div class="radio-box">';
-                    sphtml += '<div class="radio__input">';
-                    sphtml += '<input data-name="' + v.title +
-                    '" class="shipping_radio form-input-radio" type="radio" id="standard-shipping' + v.handle + '" data-id="' +
-                    v.handle + '" data-price="' + parseFloat(v.priceV2.amount).toFixed(2) + '" data-name="' + v
-                            .title + '" name="shipping_charge" value="' + v.priceV2.amount + '" required="required" ' +
-                    checked + '>';
-                    sphtml += '</div>';
-                    sphtml += '<label class="radio__label" for="standard-shipping' + v.handle + '">';
-                    sphtml += '<span class="radio__label__primary">' + v.title + '</span>';
-                    sphtml += '<span class="radio__label__accessory"><?=$shop_currency_symbol?>' + parseFloat(v.priceV2.amount).toFixed(2) + '</span>';
-
-                    <?php if (isset($shipping_method_desc) && !empty($shipping_method_desc)) { ?>
-                    sphtml += '<br><span class="radio__label__secondary"><?=$shipping_method_desc?></span>';
-                    <?php }?>
-
-                    sphtml += '</label>';
-                    sphtml += '</div>';
-                    cnt++;
-                });
-            } else {
                 sphtml += '<div class="radio-box">';
-                sphtml += '<div class="radio__input">&nbsp;</div>';
-                sphtml += '<label class="radio__label" for="no-shipping">';
-                sphtml += '<span class="radio__label__primary">No shipping found</span>';
+                sphtml += '<div class="radio__input">';
+                sphtml += '<input data-name="' + v.title +
+                '" class="shipping_radio form-input-radio" type="radio" id="standard-shipping' + v.handle + '" data-id="' +
+                v.handle + '" data-price="' + parseFloat(v.price.amount).toFixed(2) + '" data-name="' + v
+                        .title + '" name="shipping_charge" value="' + v.price.amount + '" required="required" ' +
+                checked + '>';
+                sphtml += '</div>';
+                sphtml += '<label class="radio__label" for="standard-shipping' + v.handle + '">';
+                sphtml += '<span class="radio__label__primary">' + v.title + '</span>';
+                sphtml += '<span class="radio__label__accessory"><?=$shop_currency_symbol?>' + parseFloat(v.price.amount).toFixed(2) + '</span>';
+
+                <?php if (isset($shipping_method_desc) && !empty($shipping_method_desc)) { ?>
+                sphtml += '<br><span class="radio__label__secondary"><?=$shipping_method_desc?></span>';
+                <?php }?>
+
                 sphtml += '</label>';
                 sphtml += '</div>';
-            }
+                cnt++;
+            });
         } else {
             sphtml += '<div class="radio-box">';
             sphtml += '<div class="radio__input">&nbsp;</div>';
@@ -1370,21 +1673,18 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
         $('#cont_to_pay_method').css('pointer-events', '');
 
 
-        if ($(".shipping_radio").length > 0 && obj.DATA != undefined && obj.DATA.availableShippingRates != undefined && obj
-                        .DATA.availableShippingRates.shippingRates != undefined && obj.DATA.availableShippingRates.shippingRates
-                        .length > 0) {
+        if ($(".shipping_radio").length > 0 && obj.data != undefined && obj.data.availableShippingRates != undefined && obj.data.availableShippingRates.length > 0) {
             //this code is for suppose in last step, if we apply promocode and then shipping-rates change and our selected shipping-method will gone, then this code check and apply latest shipping-method
             var checked_sr_exist = 'No';
-            $(obj.DATA.availableShippingRates.shippingRates).each(function(k, v) {
-                if (obj.DATA.checkout_data != null && obj.DATA.checkout_data.shipping_line != null) {
-                    if (v.handle == obj.DATA.checkout_data.shipping_line.handle || decodeURIComponent(v.handle) ==
-                            obj.DATA.checkout_data.shipping_line.handle) {
+            $(obj.data.availableShippingRates).each(function(k, v) {
+                if (obj.data.shippingLine != null && obj.data.shippingLine.shippingRateHandle != null) {
+                    if (v.handle == obj.data.shippingLine.shippingRateHandle || decodeURIComponent(v.handle) == obj.data.shippingLine.shippingRateHandle) {
                         checked_sr_exist = 'Yes';
                     }
                 }
             });
             if (checked_sr_exist == 'No') {
-                if (obj.DATA.checkout_data.shipping_line != null) {
+                if (obj.data.shippingLine != null) {
                     // here a==null is not working properly, so we put reverse condition
                 } else {
                     if ($(".shipping_radio:checked").data('id') == 'local-pickup-0.00') {
@@ -1392,7 +1692,7 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
                     } else if ($(".shipping_radio:checked").data('id') == 'free-shipping-0.00') {
                         //when there is "free-shipping", then there is no option coming from shopify, so no need to trigger again. free shipping is coming from app.
                     } else {
-                        $('.shipping_radio').trigger('change');
+                        //$('.shipping_radio').trigger('change');
                     }
                 }
             }
@@ -1597,7 +1897,7 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
                 allow_klaviyo_tracking: allow_klaviyo_tracking,
                 cart: cart,
                 shop: shop,
-                step: 'SHIP_METHOD',
+                step: 'SHIP_METHOD'
             },
             success: function(result) {
                 var obj = JSON.parse(result);
@@ -1855,11 +2155,13 @@ if ($enable_address_autocompletion == true && !empty($google_api_key)) { ?>
             $bzip.parent().parent().addClass('field--error');
             errCnt++;
         }
+        <?php if (isset($cs_data->cs_ship_phone_require) && $cs_data->cs_ship_phone_require=='required') { ?>
         if ($bphone.val() == "") {
             $('<p class="error-msg">Please enter a valid phone number</p>').insertAfter($bphone.parent('label'));
             $bphone.parent().parent().addClass('field--error');
             errCnt++;
         }
+        <?php }?>
 
         if ($("#billing-2").is(':checked') && errCnt == 0) {
             //if shipping or billing state is include in same-address condition

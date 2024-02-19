@@ -171,20 +171,20 @@ $qa_cart_link = "/cart";
 
         .product-table .product__price {
             text-align: right;
-            font-family: Helvetica Now Display;
+            /*font-family: Helvetica Now Display;*/
             font-size: 14px;
-            min-width: 46px;
+            min-width: 60px;
         }
         .product__description span {
             font-size: 12px;
-            font-family: Helvetica Now Text;
+            /*font-family: Helvetica Now Text;*/
             line-height: 1.3em;
         }
         .total-line__price span#cart_total_price {
             letter-spacing: -0.04em;
             line-height: 1em;
             font-size: 25px!important;
-            font-family: Helvetica Now Display;
+            /*font-family: Helvetica Now Display;*/
         }
         #continue_to_ship_method_btn[disabled] {
             background-color: #cccccc !important;
@@ -1264,6 +1264,28 @@ $qa_cart_link = "/cart";
                                     </div>
                                     <?php } ?>
 
+                                    <div class="form-group">
+                                        <label for="phone" class="uni-form-input">
+                                            <input type="text" id="phone" name="phone" class="form-control"
+                                                   autocomplete="shipping phone"
+                                                   data-mask="(000) 000-0000"
+                                                   value="<?= isset($ac_data->ac_customer_phone) ? $ac_data->ac_customer_phone : ''; ?>"
+                                                   data-empty="<?= (isset($ac_data->ac_customer_phone) && !empty($ac_data->ac_customer_phone)) ? 'false' : 'true'; ?>">
+                                            <span>Phone</span>
+                                            <div class="field__icon">
+                                                <div class="tooltip-container">
+                                                    <button type="button" class="tooltip-control" data-tooltip-control="true" aria-label="More information" aria-describedby="tooltip-for-phone" aria-controls="tooltip-for-phone" aria-pressed="false" placeholder="Phone">
+                                                        <svg class="icon-svg icon-svg--color-adaptive-lighter icon-svg--size-16 icon-svg--block icon-svg--center" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                                                            <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm.7 13H6.8v-2h1.9v2zm2.6-7.1c0 1.8-1.3 2.6-2.8 2.8l-.1 1.1H7.3L7 7.5l.1-.1c1.8-.1 2.6-.6 2.6-1.6 0-.8-.6-1.3-1.6-1.3-.9 0-1.6.4-2.3 1.1L4.7 4.5c.8-.9 1.9-1.6 3.4-1.6 1.9.1 3.2 1.2 3.2 3z"></path>
+                                                        </svg>
+                                                    </button>
+                                                    <span class="tooltip">In case we need to contact you about your order</span>
+                                                </div>
+                                            </div>
+
+                                        </label>
+                                    </div>
+
 
                                     <div class="form-group">
                                         <label for="po_number" class="uni-form-input">
@@ -1440,27 +1462,7 @@ $qa_cart_link = "/cart";
                                                 <span>ZIP Code</span>
                                             </label>
                                         </div>
-                                        <div class="form-group">
-                                            <label for="phone" class="uni-form-input">
-                                                <input type="text" id="phone" name="phone" class="form-control"
-                                                       autocomplete="shipping phone"
-                                                       data-mask="(000) 000-0000"
-                                                       value="<?= isset($ac_data->ac_customer_phone) ? $ac_data->ac_customer_phone : ''; ?>"
-                                                       data-empty="<?= (isset($ac_data->ac_customer_phone) && !empty($ac_data->ac_customer_phone)) ? 'false' : 'true'; ?>">
-                                                <span>Phone</span>
-                                                <div class="field__icon">
-                                                    <div class="tooltip-container">
-                                                        <button type="button" class="tooltip-control" data-tooltip-control="true" aria-label="More information" aria-describedby="tooltip-for-phone" aria-controls="tooltip-for-phone" aria-pressed="false" placeholder="Phone">
-                                                            <svg class="icon-svg icon-svg--color-adaptive-lighter icon-svg--size-16 icon-svg--block icon-svg--center" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-                                                                <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm.7 13H6.8v-2h1.9v2zm2.6-7.1c0 1.8-1.3 2.6-2.8 2.8l-.1 1.1H7.3L7 7.5l.1-.1c1.8-.1 2.6-.6 2.6-1.6 0-.8-.6-1.3-1.6-1.3-.9 0-1.6.4-2.3 1.1L4.7 4.5c.8-.9 1.9-1.6 3.4-1.6 1.9.1 3.2 1.2 3.2 3z"></path>
-                                                            </svg>
-                                                        </button>
-                                                        <span class="tooltip">In case we need to contact you about your order</span>
-                                                    </div>
-                                                </div>
 
-                                            </label>
-                                        </div>
                                     </div>
 
                                     <div class="form-group form-footer">
@@ -1694,8 +1696,8 @@ $qa_cart_link = "/cart";
                                             <option data-firstapprover="matthias.vernier@subsea7.com" data-secondapprover="" value="Vernier, Matthias">Vernier, Matthias</option>
                                             <option data-firstapprover="james.ward@subsea7.com" data-secondapprover="" value="Ward, James">Ward, James</option>
                                             <option data-firstapprover="jeremy.woulds@subsea7.com" data-secondapprover="" value="Woulds, Jeremy">Woulds, Jeremy</option>
-                                            <!--<option data-firstapprover="sweta@webinopoly.com" data-secondapprover="" value="Sweta">Sweta</option>
-                                        <option data-firstapprover="amit.webinopoly@gmail.com" data-secondapprover="" value="Amit">Amit</option>-->
+                                            <option data-firstapprover="sweta@webinopoly.com" data-secondapprover="" value="Sweta webinopoly">Sweta webinopoly</option>
+                                            <option data-firstapprover="amit.webinopoly@gmail.com" data-secondapprover="" value="Amit webinopoly">Amit webinopoly</option>
                                             <option data-firstapprover="shawna@mycorporateexpressions.com" data-secondapprover="" value="Store Admin">*Store Admin – Do Not Use</option>
                                         </select>
                                         <div class="field__caret">
@@ -2154,7 +2156,7 @@ $qa_cart_link = "/cart";
                                 </td>
                             </tr>
 
-                            <tr class="total-line total-line--taxes " id="cart_taxes_tr" style="display: none;">
+                            <tr class="total-line total-line--taxes " id="cart_taxes_tr">
                                 <th class="total-line__name" scope="row">Estimated taxes</th>
                                 <td class="total-line__price">
 									<span class="order-summary__emphasis" id="cart_taxes">

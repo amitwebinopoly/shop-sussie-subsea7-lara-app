@@ -129,8 +129,9 @@ Route::get('/api/products/create', function (Request $request) {
 })->middleware('shopify.auth');*/
 
 Route::post('/api/webhooks', function (Request $request) {
-    $topic = $request->header(HttpHeaders::X_SHOPIFY_TOPIC, '');
     try {
+        $topic = $request->header(HttpHeaders::X_SHOPIFY_TOPIC, '');
+
         $response = Registry::process($request->header(), $request->getContent());
         if (!$response->isSuccess()) {
             Log::error("Failed to process '$topic' webhook: {$response->getErrorMessage()}");
@@ -144,4 +145,3 @@ Route::post('/api/webhooks', function (Request $request) {
         return response()->json(['message' => "Got an exception when handling '$topic' webhook"], 500);
     }
 });
-

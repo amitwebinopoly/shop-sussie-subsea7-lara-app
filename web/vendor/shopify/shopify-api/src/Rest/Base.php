@@ -13,7 +13,9 @@ use Shopify\Context;
 use Shopify\Exception\RestResourceException;
 use Shopify\Exception\RestResourceRequestException;
 
-abstract class Base
+// When upgrading to PHP 8.2, consider using the AllowDynamicProperties attribute
+// https://stitcher.io/blog/deprecated-dynamic-properties-in-php-82#a-better-alternative
+abstract class Base extends \stdClass
 {
     public static string $API_VERSION;
     public static ?array $NEXT_PAGE_QUERY = null;
@@ -134,10 +136,10 @@ abstract class Base
         return strtolower(preg_replace("/([a-z])([A-Z])/", "$1_$2", $className));
     }
 
-    protected static function getJsonResponseBodyName(): string
+    protected static function getJsonResponseBodyNames(): array
     {
         $className = preg_replace("/^([A-z_0-9]+\\\)*([A-z_]+)/", "$2", static::class);
-        return strtolower(preg_replace("/([a-z])([A-Z])/", "$1_$2", $className));
+        return [strtolower(preg_replace("/([a-z])([A-Z])/", "$1_$2", $className))];
     }
 
     /**
@@ -178,16 +180,30 @@ abstract class Base
         $params = array_filter($params);
         switch ($httpMethod) {
             case "get":
-                $response = $client->get($path, [], $params);
+                $response = $client->get(
+                    path: $path,
+                    query: $params,
+                );
                 break;
             case "post":
-                $response = $client->post($path, $body, [], $params);
+                $response = $client->post(
+                    path: $path,
+                    body: $body,
+                    query: $params,
+                );
                 break;
             case "put":
-                $response = $client->put($path, $body, [], $params);
+                $response = $client->put(
+                    path: $path,
+                    body: $body,
+                    query: $params,
+                );
                 break;
             case "delete":
-                $response = $client->delete($path, [], $params);
+                $response = $client->delete(
+                    path: $path,
+                    query: $params,
+                );
                 break;
         }
 
@@ -264,20 +280,23 @@ abstract class Base
         $objects = [];
 
         $body = $response->getDecodedBody();
-        $className = static::getJsonResponseBodyName();
-        $pluralClass = self::pluralize($className);
+        $classNames = static::getJsonResponseBodyNames();
 
-        if (!empty($body)) {
-            if (array_key_exists($pluralClass, $body)) {
-                foreach ($body[$pluralClass] as $entry) {
-                    array_push($objects, self::createInstance($entry, $session));
+        foreach ($classNames as $className) {
+            $pluralClass = self::pluralize($className);
+
+            if (!empty($body)) {
+                if (array_key_exists($pluralClass, $body)) {
+                    foreach ($body[$pluralClass] as $entry) {
+                        array_push($objects, self::createInstance($entry, $session));
+                    }
+                } elseif (array_key_exists($className, $body) && array_key_exists(0, $body[$className])) {
+                    foreach ($body[$className] as $entry) {
+                        array_push($objects, self::createInstance($entry, $session));
+                    }
+                } elseif (array_key_exists($className, $body)) {
+                    array_push($objects, self::createInstance($body[$className], $session));
                 }
-            } elseif (array_key_exists($className, $body) && array_key_exists(0, $body[$className])) {
-                foreach ($body[$className] as $entry) {
-                    array_push($objects, self::createInstance($entry, $session));
-                }
-            } elseif (array_key_exists($className, $body)) {
-                array_push($objects, self::createInstance($body[$className], $session));
             }
         }
 
